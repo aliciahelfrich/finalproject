@@ -1,0 +1,22 @@
+---
+title: "Group Proposal"
+author: "Alicia Helfrich, Olivia Gomez, Akbar Naqvi"
+format: html
+editor: visual
+embed-resources: true
+---
+
+## Motivating Question
+
+
+
+
+
+## Data Sources
+
+
+
+
+
+
+## Anticipated Techincal Hurdles

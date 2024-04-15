@@ -6,6 +6,12 @@
 .RData
 .RDataTmp
 
+#Rproject
+/.Rproj
+
+#Data Folder
+/data
+
 # User-specific files
 .Ruserdata
 
