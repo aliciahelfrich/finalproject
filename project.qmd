@@ -1,9 +1,55 @@
 ---
-title: "project"
+title: "Final Project"
 author: "Alicia Helfrich, Olivia Gomez, and Akbar Naqvi"
 format: html
 editor: visual
+embed-resources: true
 ---
+
+Outline from meeting:
+
+-   Lit review
+
+-   Overview of data sources
+
+-   Exploratory Data Analysis and Data Cleaning
+
+-   Building Models
+
+-   Analyzing results - variable importance
+
+-   Conclusion Limitations
+
+- download file for data folder: 
+
+(Data and Documents - Primary Data File) sas links: 
+ -    https://www.census.gov/programs-surveys/sipp/data/datasets/2022-data/2022.html
+ -    https://www.census.gov/programs-surveys/sipp/data/datasets/2019-data/2019.html
+ 
 
 ## Project Overview
 
+## Data Sources
+```{r}
+
+library(tidyverse)
+library(haven)
+
+```
+
+
+```{r}
+
+data_2019 <- read_sas("data/rw2019.sas7bdat")
+
+data_2022 <- read_sas("data/pu2022.sas7bdat")
+
+```
+
+## Exploratory Data Analysis
+
+## Predictive Modeling
+
+## Analyzing Results
+
+## Conclusions and Limitations
