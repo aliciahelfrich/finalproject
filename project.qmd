@@ -21,17 +21,34 @@ Outline from meeting:
 -   Conclusion Limitations
 
 -   download file for data folder:
-
-(Data and Documents - Primary Data File)  links: - https://www.census.gov/programs-surveys/sipp/data/datasets/2022-data/2022.html - https://www.census.gov/programs-surveys/sipp/data/datasets/2019-data/2019.html
+(Data and Documents - Primary Data File) link:   https://www.census.gov/programs-surveys/sipp/data/datasets/2019-data/2019.html
+Download the Pipe-Delimited Text Format version to read in a CSV
 
 ## Project Overview
 
--   OG: state categories of eligibility rules 
--   OG: intro draft
+### Introduction
+
+The Medicaid program, created in 1965, is a joint federal-state health insurance program. It provides coverage for health and other related services for the most economically disadvantaged populations, including low-income children and their families, low-income seniors, and low-income people with disabilities. It is a means-tested entitlement program. Thus, to qualify, individuals must earn less than a specified amount per year. However, eligibility criteria can vary by population group and state.
+
+Given its definition as a federal-state venture to provide health coverage, states can establish their own eligibility guidelines, benefit packages, provider payment policies, and administrative structures. However, states must meet certain federal requirements in order to receive federal reimbursement for a share of program costs. States may choose to cover more population groups, but to receive federal funding, they must cover mandatory groups like low-income families with children. (https://www.macpac.gov/medicaid-101/eligibility/)
+
+Coverage disruptions and losses in the Medicaid program can be defined as "churn." Changing financial circumstances and difficultly with the arduous renewal and redetermination processes are just two reasons why a beneficiary may lose Medicaid coverage. Research has shown that churn is associated with uninsurance and delayed care for beneficiaries. It also leads to higher administrative costs, less predictable state expenditures, and increased health care costs. (https://aspe.hhs.gov/sites/default/files/private/pdf/265366/medicaid-churning-ib.pdf)
+
+During the COVID-19 pandemic, the federal government authorized a continuous enrollment provision for Medicaid. In order to receive an enhanced federal match rate and thus more federal dollars to operate the program, states had to maintain enrollment of nearly all beneficiaries during the Public Health Emergency (PHE). This provision ended in March of 2023, meaning that states were able to resume eligibility and redetermination checks after 3 years. This is expected to lead to the resumption of churn in the program, and thus increased administrative costs for states. 
+
+### Methodology
+
+Using supervised machine learning techniques, we developed a model to predict the likelihood that a Medicaid beneficiary will churn out of the program; in other words, if they lose eligibility and are terminated from the program. While the main eligibility guideline is income, we believe that utilizing other demographic factors can be a helpful predictor of churn. Such a predictive model can help states reduce churn by targeting outreach and enrollment activities of states. For example, it may be in a state's best interest to target enrollment campaigns for other public insurance programs towards population groups of interest. 
+
+As mentioned before, states have different eligibility rules and guidelines. For example, several states allow for 12-month continuous eligibility,m while other conduct periodic eligibility checks before the standard annual renewal date. To account for some of these variations, we have created two indicator variables. One indicates if a state has 12-month continuous eligibility for enrolled adults, and one indicates if a state conducts periodic eligibility checks.
+
+- 30 states reported that they conduct data matches on a periodic basis to identify potential changes that may affect financial or other eligibility criteria between annual renewal periods (KFF table)
+
+- 12-month continuous eligibility for adults - New York, Oregon, and Illinois (Commonwealth)
 
 ## Data Sources
 
--   OG: look into survey methodology 
+-   OG: look into survey methodology
 
 ```{r}
 
@@ -41,9 +58,8 @@ library(data.table)
 
 ```
 
+### Reading in Data
 
-
-### Reading in Data 
 ```{r}
 
 data_2019 <- fread("data/pu2019.csv", 
@@ -52,7 +68,9 @@ data_2019 <- fread("data/pu2019.csv",
 
 data_2019_jan <- data_2019 %>%
   filter(MONTHCODE == 1) %>%
-  # filter out people without Medicaid in the month of January (using EMDMTH)
+  # only include the month of January
+  filter(RPUBTYPE2 == 1)
+  # filter out people without Medicaid in the month of January 
   
   # this might be the outcome: RMARKTPLACE
   
@@ -66,13 +84,18 @@ data_2019_jan <- data_2019 %>%
 ```
 
 ## Exploratory Data Analysis
+
 ### missingness (Akbar)
+
 ### correlation (Alicia)
+
 ### explore categorical variables of interest (Alicia - depending on Aaron's response)
-### explore the distribution of outcome variable 
+
+### explore the distribution of outcome variable
 
 ### question for Aaron - does reducing categorical variables matter as much for tree models?
-### how do we decide what variables to drop?  
+
+### how do we decide what variables to drop?
 
 ## Predictive Modeling
 
