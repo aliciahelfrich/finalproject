@@ -21,61 +21,11 @@ Outline from meeting:
 -   Conclusion Limitations
 
 -   download file for data folder:
-
-(Data and Documents - Primary Data File)  links: - https://www.census.gov/programs-surveys/sipp/data/datasets/2022-data/2022.html - https://www.census.gov/programs-surveys/sipp/data/datasets/2019-data/2019.html
+(Data and Documents - Primary Data File) link:   https://www.census.gov/programs-surveys/sipp/data/datasets/2019-data/2019.html
+Download the Pipe-Delimited Text Format version to read in a CSV
 
 ## Project Overview
 
--   OG: state categories of eligibility rules 
--   OG: intro draft
+### Introduction
 
-## Data Sources
-
--   OG: look into survey methodology 
-
-```{r}
-
-library(tidyverse)
-library(haven)
-library(data.table)
-
-```
-
-
-
-### Reading in Data 
-```{r}
-
-data_2019 <- fread("data/pu2019.csv", 
-                   sep = "|",
-                   showProgress = TRUE)
-
-data_2019_jan <- data_2019 %>%
-  filter(MONTHCODE == 1) %>%
-  # filter out people without Medicaid in the month of January (using EMDMTH)
-  
-  # this might be the outcome: RMARKTPLACE
-  
-# model will help target outreach by predicting those most likely to churn
-  
-# adding variable of types of eligibility rules by state (grouping)
-  
-# two tables 
-
-
-```
-
-## Exploratory Data Analysis
-### missingness (Akbar)
-### correlation (Alicia)
-### explore categorical variables of interest (Alicia - depending on Aaron's response)
-### explore the distribution of outcome variable 
-
-### question for Aaron - does reducing categorical variables matter as much for tree models?
-### how do we decide what variables to drop?  
-
-## Predictive Modeling
-
-## Analyzing Results
-
-## Conclusions and Limitations
+The Medicaid program, created in 1965, is a joint federal-state health insurance program. It provides coverage for health and other related services for the most economically disadvantaged populations, including low-income children and their families, low-income seniors, and low-inc
