@@ -20,8 +20,7 @@ Outline from meeting:
 
 -   Conclusion Limitations
 
--   download file for data folder: (Data and Documents - Primary Data File) link: https://www.census.gov/programs-surveys/sipp/data/datasets/2019-data/2019.html 
-Download the Pipe-Delimited Text Format version to read in a CSV
+-   download file for data folder: (Data and Documents - Primary Data File) link: https://www.census.gov/programs-surveys/sipp/data/datasets/2019-data/2019.html Download the Pipe-Delimited Text Format version to read in a CSV
 
 ## Project Overview
 
@@ -37,20 +36,15 @@ During the COVID-19 pandemic, the federal government authorized a continuous enr
 
 ### Methodology
 
-Using supervised machine learning techniques and the Survey of Income and Participation Data, we developed a model to predict the likelihood that a Medicaid beneficiary will churn out of the program during the course of a year; in other words, if they lose eligibility and are terminated from the program. While the main eligibility guideline for Medicaid is income, we believe that utilizing other demographic factors can be a helpful predictor of churn. Such a predictive model can help states reduce churn by targeting outreach and enrollment activities of states. For example, it may be in a state's best interest to target enrollment campaigns for other public insurance programs towards population groups of interest. This can ensure everyone who is eligible has access to the program, and can enroll people into other public programs (like a Marketplace plan) if they are eligible. Reducing the uninsured population can reduce health care costs for states. 
+Using supervised machine learning techniques and the Survey of Income and Participation Data, we developed a model to predict the likelihood that a Medicaid beneficiary will churn out of the program during the course of a year; in other words, if they lose eligibility and are terminated from the program. While the main eligibility guideline for Medicaid is income, we believe that utilizing other demographic factors can be a helpful predictor of churn. Such a predictive model can help states reduce churn by targeting outreach and enrollment activities of states. For example, it may be in a state's best interest to target enrollment campaigns for other public insurance programs towards population groups of interest. This can ensure everyone who is eligible has access to the program, and can enroll people into other public programs (like a Marketplace plan) if they are eligible. Reducing the uninsured population can reduce health care costs for states.
 
-As mentioned before, states have different eligibility rules and guidelines. For example, three states allow for 12-month continuous eligibility, while others conduct periodic eligibility checks before the standard annual renewal date. To account for some of these variations, we have created several indicator variables. 
+As mentioned before, states have different eligibility rules and guidelines. For example, three states allow for 12-month continuous eligibility, while others conduct periodic eligibility checks before the standard annual renewal date. To account for some of these variations, we have created several indicator variables.
 
-Sources of state eligibility variables:
--   (KFF tables - https://www.kff.org/report-section/medicaid-and-chip-eligibility-enrollment-and-cost-sharing-policies-as-of-january-2020-findings-from-a-50-state-survey-tables/)
--   (Commonwealth - https://www.commonwealthfund.org/publications/issue-briefs/2023/sep/ensuring-continuous-eligibility-medicaid-impacts-adults)
-
-
+Sources of state eligibility variables: - (KFF tables - https://www.kff.org/report-section/medicaid-and-chip-eligibility-enrollment-and-cost-sharing-policies-as-of-january-2020-findings-from-a-50-state-survey-tables/) - (Commonwealth - https://www.commonwealthfund.org/publications/issue-briefs/2023/sep/ensuring-continuous-eligibility-medicaid-impacts-adults)
 
 ## Data Sources
 
-The Survey of Income and Program Participation (SIPP) is an extensive survey conducted by the U.S. Census Bureau. It contains data on income, labor force participation, social program participation and eligibility,
-and general demographic characteristics. We are using the SIPP given its breadth, detail, and inclusion of health insurance status. We are using data from the year 2019, which was the last full year before the start of the COVID-19 pandemic and three full years of continuous eligibility in Medicaid. Using data after 2019 would not allow us to accurately examine churn. It is important to note that survey parti
+The Survey of Income and Program Participation (SIPP) is an extensive survey conducted by the U.S. Census Bureau. It contains data on income, labor force participation, social program participation and eligibility, and general demographic characteristics. We are using the SIPP given its breadth, detail, and inclusion of health insurance status. We are using data from the year 2019, which was the last full year before the start of the COVID-19 pandemic and three full years of continuous eligibility in Medicaid. Using data after 2019 would not allow us to accurately examine churn. It is important to note that survey parti
 
 Survey participants provide data for each month in the preceding calendar year at the time of the interview. Because of this detail, observations are on the person-month level, meaning there could be 12 observations for a single person for a given variable. Household-level questions are copied across all members of the household.
 
@@ -67,21 +61,24 @@ library(readxl)
 
 ```{r}
 
+#initial pull of data
 data_2019 <- fread("data/pu2019.csv", 
                    sep = "|",
-                   showProgress = TRUE)
-
-
-data_2019 <- data_2019 %>%
+                   showProgress = TRUE) %>% 
     select(-starts_with("A")) # these are status flags of all variables
 
-
+#filtering individuals will medicaid in January
 data_2019_jan <- data_2019 %>%
   select(-starts_with("A")) %>%
   filter(MONTHCODE == 1) %>%
   # only include the month of January
   filter(RPUBTYPE2 == 1)
   # filter out people without Medicaid in the month of January 
+
+#processing outcome variable - individuals covered by medicaid that experienced a gap in coverage during 2029
+lost_medicaid <- data_2019 %>% 
+  select(SSUID,MONTHCODE,RHLTHMTH,RPUBTYPE2) %>% 
+  arrange(SSUID,MONTHCODE)
 
 # tibble of indicator variables for state eligibility rules of interest
 state_eligibility_rules <- read_excel("state_eligibility_rules.xlsx")
@@ -91,7 +88,10 @@ state_eligibility_rules <- read_excel("state_eligibility_rules.xlsx")
 missing_vars <- data_2019 %>%
   summarise_all(~all(is.na(.))) %>%
   gather(variable, is_missing) %>%
-  filter(is_missing)
+  filter(is_missing) %>% 
+  mutate(
+  
+  )
 
 
 ```
