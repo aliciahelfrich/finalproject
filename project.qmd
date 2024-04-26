@@ -78,7 +78,31 @@ data_2019_jan <- data_2019 %>%
 #processing outcome variable - individuals covered by medicaid that experienced a gap in coverage during 2029
 lost_medicaid <- data_2019 %>% 
   select(SSUID,MONTHCODE,RHLTHMTH,RPUBTYPE2) %>% 
-  arrange(SSUID,MONTHCODE)
+  #creating text "lag" field
+  arrange(SSUID,MONTHCODE) %>% 
+    mutate(
+      #recode health insurance bulean to be "no_insurance"
+      
+      #recode medicaid bulean to be "medicaid"
+      
+      #create field of "medicaid_last_month" as a text lag field
+      
+      #create variable subtracting "no_insurance" & "medicaid" so that values that = 2 mean someone experienced a lag in medicaid
+      
+      #create "lost_medicaid" variable with last field
+      
+    pivot_wider(
+      #create df with unique individuals and thier "lost_coverage" variables for each month
+      
+      #create new variable summing all of the values, if anyone is > 0, it means they experienced a lag at some point of the year
+    )
+    
+    #left join January filtered data to the lost medicaid so that outcome variable for only those that started with medicaid have the lost_medicaid variable on them
+    
+    
+    
+
+  
 
 # tibble of indicator variables for state eligibility rules of interest
 state_eligibility_rules <- read_excel("state_eligibility_rules.xlsx")
