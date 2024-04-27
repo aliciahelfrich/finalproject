@@ -54,6 +54,7 @@ library(tidyverse)
 library(haven)
 library(data.table)
 library(readxl)
+library(lubridate)
 
 ```
 
@@ -72,38 +73,76 @@ data_2019_jan <- data_2019 %>%
   select(-starts_with("A")) %>%
   filter(MONTHCODE == 1) %>%
   # only include the month of January
-  filter(RPUBTYPE2 == 1)
+  filter(RPUBTYPE2 == 1) %>% 
+  filter(SPANEL == 2019)
   # filter out people without Medicaid in the month of January 
 
 #processing outcome variable - individuals covered by medicaid that experienced a gap in coverage during 2029
-lost_medicaid <- data_2019 %>% 
-  select(SSUID,MONTHCODE,RHLTHMTH,RPUBTYPE2) %>% 
+lost_medicaid_detail <- data_2019 %>% 
+  filter(SPANEL == 2019) %>% 
+  select(SPANEL,SSUID,SWAVE,PNUM,MONTHCODE,RHLTHMTH,RPUBTYPE2) %>% 
+    #make unique ID for each respondent
+  mutate(unique_id = paste(SSUID,PNUM))
+  
+lost_medicaid <- lost_medicaid_detaill %>% 
   #creating text "lag" field
-  arrange(SSUID,MONTHCODE) %>% 
+  arrange(unique_id,MONTHCODE) %>% 
     mutate(
       #recode health insurance bulean to be "no_insurance"
-      
+      no_insurance = case_when(
+        RHLTHMTH == 2 ~ 1, #had no coverage whatsoever
+        RHLTHMTH == 1 ~ 0 #had coverage
+      ),
       #recode medicaid bulean to be "medicaid"
+      medicaid = case_when(
+        RPUBTYPE2 == 1 ~ 1, #had medicaid specifically
+        RPUBTYPE2 == 2 ~ 0
+      ),
+      #create field of "medicaid_last_month" as a lag field
+      medicaid_last_month = lag(medicaid, n = 1),
       
-      #create field of "medicaid_last_month" as a text lag field
+      #create variable adding "no_insurance" & "medicaid" so that values that = 2 mean someone experienced a lag in medicaid
+      lost_medicaid = medicaid_last_month + no_insurance,
       
-      #create variable subtracting "no_insurance" & "medicaid" so that values that = 2 mean someone experienced a lag in medicaid
-      
-      #create "lost_medicaid" variable with last field
-      
+      lost_medicaid = case_when(
+        lost_medicaid == 2 ~ 1,
+        lost_medicaid < 2 ~ 0
+      ),
+      #rename month columns
+      month = case_when(
+        MONTHCODE == 1 ~ "January",
+        MONTHCODE == 2 ~ "February",
+        MONTHCODE == 3 ~ "March",
+        MONTHCODE == 4 ~ "April",
+        MONTHCODE == 5 ~ "May",
+        MONTHCODE == 6 ~ "June",
+        MONTHCODE == 7 ~ "July",
+        MONTHCODE == 8 ~ "August",
+        MONTHCODE == 9 ~ "September",
+        MONTHCODE == 10 ~ "October",
+        MONTHCODE == 11 ~ "November",
+        MONTHCODE == 12 ~ "December")
+    ) %>% 
+  #transform data into setting where each row represents a unique participant
     pivot_wider(
+      id_cols = unique_id, 
+      names_from = month,
+      values_from = lost_medicaid) %>% 
+  #Create new field that adds together each month, where values >0 means someone lost medicaid
+      mutate(
+        medicaid_lag = sum(January,February,March,April,May,
+                           June,July,August,September,October,
+                           November,December))
+      
       #create df with unique individuals and thier "lost_coverage" variables for each month
+
       
       #create new variable summing all of the values, if anyone is > 0, it means they experienced a lag at some point of the year
-    )
-    
-    #left join January filtered data to the lost medicaid so that outcome variable for only those that started with medicaid have the lost_medicaid variable on them
     
     
+#left join January filtered data to the lost medicaid so that outcome variable for only those that started with medicaid have the lost_medicaid variable on them
     
-
   
-
 # tibble of indicator variables for state eligibility rules of interest
 state_eligibility_rules <- read_excel("state_eligibility_rules.xlsx")
 
