@@ -60,33 +60,46 @@ library(lubridate)
 
 ### Reading in Data
 
-```{r}
+```{r, cache=TRUE, cache.id="data_pull"}
 
 #initial pull of data
-data_2019 <- fread("data/pu2019.csv", 
+data_2018 <- fread("data/pu2018.csv", 
                    sep = "|",
                    showProgress = TRUE) %>% 
     select(-starts_with("A")) # these are status flags of all variables
 
-#filtering individuals will medicaid in January
-data_2019_jan <- data_2019 %>%
-  select(-starts_with("A")) %>%
-  filter(MONTHCODE == 1) %>%
-  # only include the month of January
-  filter(RPUBTYPE2 == 1) %>% 
-  filter(SPANEL == 2019)
-  # filter out people without Medicaid in the month of January 
-
-#processing outcome variable - individuals covered by medicaid that experienced a gap in coverage during 2029
-lost_medicaid_detail <- data_2019 %>% 
-  filter(SPANEL == 2019) %>% 
-  select(SPANEL,SSUID,SWAVE,PNUM,MONTHCODE,RHLTHMTH,RPUBTYPE2) %>% 
-    #make unique ID for each respondent
+data_2018 <- data_2018 %>% 
+   #make unique ID for each respondent
   mutate(unique_id = paste(SSUID,PNUM))
   
-lost_medicaid <- lost_medicaid_detaill %>% 
-  #creating text "lag" field
+
+#filtering by one month to have unique set of individuals with demographics
+#data_2019_jan <- data_2018 %>%
+ # select(-starts_with("A")) %>%
+  # only include those that had medicaid
+ # filter(RPUBTYPE2 == 1) %>% 
+  # create unique identifier record
+ #  mutate(unique_id = paste(SSUID,PNUM)) %>% 
+#  distinct(unique_id)
+
+```
+
+### Adding the variable "lost_medicaid_coverage" to the January filtered dataset - SKIP
+
+```{r}
+
+#processing outcome variable - individuals covered by medicaid that experienced a gap in coverage during 2019
+lost_medicaid_detail <- data_2018 %>%
+  
+  select(SPANEL,SSUID,SWAVE,PNUM,MONTHCODE,RHLTHMTH,RPUBTYPE2) %>% 
+  
+    #make unique ID for each respondent
+  mutate(unique_id = paste(SSUID,PNUM))
+
+#creating variables to assess if someone lost medicaid from one quarter to the next
+lost_medicaid_prep <- lost_medicaid_detail %>% 
   arrange(unique_id,MONTHCODE) %>% 
+  group_by(unique_id) %>% 
     mutate(
       #recode health insurance bulean to be "no_insurance"
       no_insurance = case_when(
@@ -96,18 +109,22 @@ lost_medicaid <- lost_medicaid_detaill %>%
       #recode medicaid bulean to be "medicaid"
       medicaid = case_when(
         RPUBTYPE2 == 1 ~ 1, #had medicaid specifically
-        RPUBTYPE2 == 2 ~ 0
+        RPUBTYPE2 == 2 ~ 0 #didn't have medicaid
       ),
-      #create field of "medicaid_last_month" as a lag field
-      medicaid_last_month = lag(medicaid, n = 1),
       
-      #create variable adding "no_insurance" & "medicaid" so that values that = 2 mean someone experienced a lag in medicaid
-      lost_medicaid = medicaid_last_month + no_insurance,
+      #create field of "medicaid_last_month" for each observation
+      medicaid_last_month = lag(medicaid),
+      
+      #create variable adding "no_insurance" & "medicaid" so that values that
+      # = 2 mean someone experienced a lag in medicaid
+      lost_medicaid = medicaid_last_month + no_insurance) %>% 
+    filter(lost_medicaid == 2) 
       
       lost_medicaid = case_when(
         lost_medicaid == 2 ~ 1,
         lost_medicaid < 2 ~ 0
-      ),
+      )
+      
       #rename month columns
       month = case_when(
         MONTHCODE == 1 ~ "January",
@@ -122,30 +139,165 @@ lost_medicaid <- lost_medicaid_detaill %>%
         MONTHCODE == 10 ~ "October",
         MONTHCODE == 11 ~ "November",
         MONTHCODE == 12 ~ "December")
-    ) %>% 
-  #transform data into setting where each row represents a unique participant
-    pivot_wider(
+    ) 
+  
+    
+    #create data frame of unique individuals that had medicaid at some point of the year
+      #will use to filter the lost_medicaid_prep 
+      had_medicaid <-  lost_medicaid_prep %>% 
+        pivot_wider(
       id_cols = unique_id, 
       names_from = month,
-      values_from = lost_medicaid) %>% 
-  #Create new field that adds together each month, where values >0 means someone lost medicaid
-      mutate(
-        medicaid_lag = sum(January,February,March,April,May,
-                           June,July,August,September,October,
-                           November,December))
+      values_from = medicaid) %>% 
+        #column to assess if someone had medicaid
+        mutate(
+       months_medicaid = sum(January,February, March, April, May, June, July, August, September, October, November, December, na.rm = TRUE),
+        months_medicaid = case_when(
+          months_medicaid >= 1 ~ 1,
+          months_medicaid < 1 ~ 0)
+      ) %>% 
+        select(unique_id,months_medicaid) %>% 
+        #filter out the people that didn't have any medicaid at all
+        filter(months_medicaid == 1)
       
-      #create df with unique individuals and thier "lost_coverage" variables for each month
+      
+    #filter main data frame to only include individuals that 
+      #had medicaid at some point of the year
+      data_2019_jan <- had_medicaid %>% 
+        left_join(x = had_medicaid,y = data_2019_jan,by = "unique_id")
 
       
-      #create new variable summing all of the values, if anyone is > 0, it means they experienced a lag at some point of the year
-    
-    
-#left join January filtered data to the lost medicaid so that outcome variable for only those that started with medicaid have the lost_medicaid variable on them
-    
+      #GO back to lost_medicaid table to filter out those that never had medicaid to lose
+      lost_medicaid <- had_medicaid %>% 
+            left_join(x = had_medicaid, y = lost_medicaid,by = "unique_id") %>% 
+      #remove \January column, since we are not looking at people who lost coverage in January
+        #select(-January) %>%
+    #Create new field that adds together each month, where values >0 means someone lost medicaid during the year
+      mutate(
+        medicaid_lag = sum(February, March, April, May, June, July, August, September, October, November, December, na.rm = TRUE),
+        medicaid_lag = case_when(
+          medicaid_lag >= 1 ~ 1,
+          medicaid_lag < 1 ~ 0)
+      )
+
+#add in "lost medicaid" varaible to january dataset
+ data_2019_jan <- data_2019_jan %>% 
+        left_join(x = data_2019_jan,y = lost_medicaid,by = "unique_id")
+ 
+ 
+ data_2019_jan %>% 
+   group_by(medicaid_lag) %>% 
+   summarize(n())
+ 
+```
+
+#Insurance Loss Coding
+```{r}
+#processing outcome variable - individuals covered by medicaid that experienced a gap in coverage during 2019
+lost_insurance_detail <- data_2018 %>%
   
+  select(SPANEL,SSUID,SWAVE,PNUM,MONTHCODE,RHLTHMTH) %>% 
+  
+    #make unique ID for each respondent
+  mutate(unique_id = paste(SSUID,PNUM))
+
+#creating variables to assess if someone lost medicaid from one quarter to the next
+lost_insurance_prep <- lost_insurance_detail %>% 
+  arrange(unique_id,MONTHCODE) %>% 
+  group_by(unique_id) %>% 
+    mutate(
+      #recode health insurance bulean to be "no_insurance"
+      no_insurance = case_when(
+        RHLTHMTH == 2 ~ 1, #had no coverage whatsoever
+        RHLTHMTH == 1 ~ 0 #had coverage
+      ),
+     
+      #create field of "no_insurance_last_month" for each observation
+      no_insurance_last_month = lag(no_insurance),
+      
+      #create variable subtracting no_insurace and no_insurance last month
+      # values will = 1 when they had insurance last month,  but didn't this
+      lost_insurance = no_insurance - no_insurance_last_month,
+     
+      insurance_gap = case_when(
+        lost_insurance > 0  ~ 1,
+        lost_insurance <= 0 ~ 0),
+     
+      #rename month columns
+      month = case_when(
+        MONTHCODE == 1 ~ "January",
+        MONTHCODE == 2 ~ "February",
+        MONTHCODE == 3 ~ "March",
+        MONTHCODE == 4 ~ "April",
+        MONTHCODE == 5 ~ "May",
+        MONTHCODE == 6 ~ "June",
+        MONTHCODE == 7 ~ "July",
+        MONTHCODE == 8 ~ "August",
+        MONTHCODE == 9 ~ "September",
+        MONTHCODE == 10 ~ "October",
+        MONTHCODE == 11 ~ "November",
+        MONTHCODE == 12 ~ "December")
+    )
+  
+    
+    #create data frame of unique individuals that had medicaid at some point of the year
+      #will use to filter the lost_medicaid_prep 
+      insurance_gap <-  lost_insurance_prep %>% 
+        pivot_wider(
+      id_cols = unique_id, 
+      names_from = month,
+      values_from = insurance_gap) %>% 
+        #column to assess if someone had medicaid
+        mutate(
+       month_of_insurance_loss = sum(January,February, March, April, May, June, July, August, September, October, November, December, na.rm = TRUE),
+        insurance_gap = case_when(
+          month_of_insurance_loss > 0 ~ 1,
+          month_of_insurance_loss < 1 ~ 0)
+        )
+    
+      data_2018_final <- insurance_gap %>% 
+        left_join(
+          x = .,
+          y = data_2018,
+          by = "unique_id"
+        ) %>% 
+         distinct(unique_id, .keep_all = TRUE)
+      
+    #filter main data frame to only include individuals that 
+      #had medicaid at some point of the year
+      data_2019_jan <- had_medicaid %>% 
+        left_join(x = had_medicaid,y = data_2019_jan,by = "unique_id")
+
+      #GO back to lost_medicaid table to filter out those that never had medicaid to lose
+      lost_medicaid <- had_medicaid %>% 
+            left_join(x = had_medicaid, y = lost_medicaid,by = "unique_id") %>% 
+      #remove \January column, since we are not looking at people who lost coverage in January
+        #select(-January) %>%
+    #Create new field that adds together each month, where values >0 means someone lost medicaid during the year
+      mutate(
+        medicaid_lag = sum(February, March, April, May, June, July, August, September, October, November, December, na.rm = TRUE),
+        medicaid_lag = case_when(
+          medicaid_lag >= 1 ~ 1,
+          medicaid_lag < 1 ~ 0)
+      )
+
+#add in "lost medicaid" variable to january data set
+ data_2019_jan <- data_2019_jan %>% 
+        left_join(x = data_2019_jan,y = lost_medicaid,by = "unique_id")
+ 
+ 
+insurance_gap %>% 
+   group_by(insurance_gap) %>% 
+   summarize(n())
+ 
+```
+
+
+
+```{r}
+
 # tibble of indicator variables for state eligibility rules of interest
 state_eligibility_rules <- read_excel("state_eligibility_rules.xlsx")
-
 
 # tibble of variables where every single value is missing (we can drop these)
 missing_vars <- data_2019 %>%
@@ -156,24 +308,101 @@ missing_vars <- data_2019 %>%
   
   )
 
-
 ```
 
 ## Exploratory Data Analysis
 
 ### missingness (Akbar)
 
+-   describe why we are leaving missinging as is, since they did imputation on thier own
+-   explain missing variables in olivia's data
+
 ### correlation (Alicia)
+
+```{r}
+#| message: false
+#| warning: false
+
+# evaluating correlation
+numeric_predictors <- data_2018_final %>%
+  select(where(is.numeric))
+
+# Calculate correlation matrix
+correlation_matrix <- cor(numeric_predictors)
+
+# Filter correlations above 0.5
+non_response_correlations <- correlation_matrix["insurance_gap", ]
+
+# Filter correlations greater than 0.5 or less than -0.5
+significant_correlations <- non_response_correlations[abs(non_response_correlations) > 0.5]
+
+significant_correlations <- significant_correlations[!is.na(significant_correlations)]
+
+# Print the significant correlations
+print(significant_correlations)
+
+
+
+# Calculate phi coefficient
+phi_coefficient <- data_2018_final %>% 
+  cor(.$insurance_gap,.$October,use = "pairwise.complete.obs")
+
+# Print the phi coefficient
+print(phi_coefficient)
+
+
+# Load the vcd package for Cramér's V calculation
+library(vcd)
+
+# Create a contingency table for two categorical variables
+cont_table <- table(categorical_variable1, categorical_variable2)
+
+# Calculate Cramér's V
+cramers_v <- assocstats(cont_table)$cramer
+
+# Create a table to display the results
+results <- data.frame(
+  Variable1 = "Categorical_Variable_1",
+  Variable2 = "Categorical_Variable_2",
+  Cramers_V = cramers_v
+)
+
+# Print the results
+print(results)
+
+
+```
 
 ### explore categorical variables of interest (Alicia - depending on Aaron's response)
 
+-   review of categorical variables and see if there is anything crazy
+
 ### explore the distribution of outcome variable
+
+-   look at what month had the most one's
 
 ### how do we decide what variables to drop?
 
+-   explain highly correlated variables and
+
 ## Predictive Modeling
 
--   precision versus accuracy - justify error metric
+-   Describing the selection of variables
+
+```{r}
+
+## Alicia's feature engineering example for the random forest model from assignment 7 
+
+rf_rec <- recipe(non_return_rate ~ ., training) %>% 
+  ## remove categorical variables with many categories
+    update_role(state_name, county_name,low_response_score,gidtr, 
+                 pct_tea_update_leave_cen_2010, new_role = "id") %>%
+      step_rm(has_role("id")) %>%
+  ## impute missing values
+  step_impute_mean(all_numeric_predictors()) 
+ 
+```
+
 -   see if any variables are 100% missing once we drop to Medicaid and January
 -   look out for allocation flags (if it was imputed), status flags all start with A
 -   consider dropping and picking key variables in each issue area
@@ -181,4 +410,9 @@ missing_vars <- data_2019 %>%
 
 ## Analyzing Results
 
+-   precision versus accuracy - justify error metric - Akbar
+-   Variable Important
+
 ## Conclusions and Limitations
+
+-   Conclusions and limitations text
