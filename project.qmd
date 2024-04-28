@@ -42,15 +42,14 @@ https://www.commonwealthfund.org/publications/issue-briefs/2022/oct/state-based-
 
 ### Methodology
 
-<<<<<<< HEAD
+
 Using supervised machine learning techniques and the Survey of Income and Participation Data, we developed a model to predict the likelihood that a Medicaid beneficiary will churn out of the program during the course of a year; in other words, if they lose eligibility and are terminated from the program. While the main eligibility guideline for Medicaid is income, we believe that utilizing other demographic factors can be a helpful predictor of churn. Such a predictive model can help states reduce churn by targeting outreach and enrollment activities of states. For example, it may be in a state's best interest to target enrollment campaigns for other public insurance programs towards population groups of interest. This can ensure everyone who is eligible has access to the program, and can enroll people into other public programs (like a Marketplace plan) if they are eligible. Reducing the uninsured population can reduce health care costs for states.
 
 As mentioned before, states have different eligibility rules and guidelines. For example, three states allow for 12-month continuous eligibility, while others conduct periodic eligibility checks before the standard annual renewal date. To account for some of these variations, we have created several indicator variables.
 
 Sources of state eligibility variables: - (KFF tables - https://www.kff.org/report-section/medicaid-and-chip-eligibility-enrollment-and-cost-sharing-policies-as-of-january-2020-findings-from-a-50-state-survey-tables/) - (Commonwealth - https://www.commonwealthfund.org/publications/issue-briefs/2023/sep/ensuring-continuous-eligibility-medicaid-impacts-adults)
-=======
+
 Using supervised machine learning techniques and data from the Survey of Income and Participation (SIPP), we developed a model to predict the likelihood that a person would lose health insurance in the course of a year. Such a predictive model can help state and federal policymakers and other interested stakeholders target outreach and enrollment activities For example, it may be in a state's best interest to target enrollment campaigns for public insurance programs towards population groups of interest. As discussed, reducing the uninsured population can reduce health care costs for states and the federal government.
->>>>>>> 1dda7adfb889a42c35079fd339684cb2971b739a
 
 ## Data Sources
 
@@ -76,7 +75,6 @@ library(vcd)
 #initial pull of data
 data_2018 <- fread("data/pu2018.csv", 
                    sep = "|",
-<<<<<<< HEAD
                    showProgress = TRUE)
 
 
@@ -108,9 +106,6 @@ Cleaning
 ```{r}
 
 data_2019 <- data_2019 %>%
-=======
-                   showProgress = TRUE) %>% 
->>>>>>> 1dda7adfb889a42c35079fd339684cb2971b739a
     select(-starts_with("A")) # these are status flags of all variables
 
 data_2018 <- data_2018 %>% 
@@ -342,16 +337,14 @@ missing_vars <- data_2019 %>%
 
 ### missingness (Akbar)
 
-<<<<<<< HEAD
+
 The SIPP uses two imputation methods based on the assumption that data are missing at random within subgroups of the population. The imputation methods used are:
 
 1.  Model-based Imputation: A process that involves estimating sequential models that predict values for a missing variable, conditional on demographic data, all other topic flags earnings data within the IRS and SSA.
 2.  Sequential hot-deck imputation: This method matches a record with missing data to that of a donor with similar background characteristics
-=======
+
 -   describe why we are leaving missinging as is, since they did imputation on thier own
 -   explain missing variables in olivia's data
->>>>>>> 1dda7adfb889a42c35079fd339684cb2971b739a
-
 
 ### correlation (Alicia)
 
@@ -430,8 +423,6 @@ data_2018_final_test <- data_2018_final %>%
          all_of(significant_correlations_names))
   
 ```
-
-
 ### explore categorical variables of interest (Alicia - depending on Aaron's response)
 
 -   review of categorical variables and see if there is anything crazy
@@ -461,7 +452,7 @@ rf_rec <- recipe(non_return_rate ~ ., training) %>%
 
 ## Analyzing Results
 
-<<<<<<< HEAD
+
 Building the model
 
 ```{r}
@@ -510,10 +501,9 @@ rf_final |>
   vip(num_features = 20) 
 
 ```
-=======
+
 -   precision versus accuracy - justify error metric - Akbar
 -   Variable Important
->>>>>>> 1dda7adfb889a42c35079fd339684cb2971b739a
 
 ## Conclusions and Limitations
 
