@@ -42,15 +42,14 @@ https://www.commonwealthfund.org/publications/issue-briefs/2022/oct/state-based-
 
 ### Methodology
 
-<<<<<<< HEAD
+
 Using supervised machine learning techniques and the Survey of Income and Participation Data, we developed a model to predict the likelihood that a Medicaid beneficiary will churn out of the program during the course of a year; in other words, if they lose eligibility and are terminated from the program. While the main eligibility guideline for Medicaid is income, we believe that utilizing other demographic factors can be a helpful predictor of churn. Such a predictive model can help states reduce churn by targeting outreach and enrollment activities of states. For example, it may be in a state's best interest to target enrollment campaigns for other public insurance programs towards population groups of interest. This can ensure everyone who is eligible has access to the program, and can enroll people into other public programs (like a Marketplace plan) if they are eligible. Reducing the uninsured population can reduce health care costs for states.
 
 As mentioned before, states have different eligibility rules and guidelines. For example, three states allow for 12-month continuous eligibility, while others conduct periodic eligibility checks before the standard annual renewal date. To account for some of these variations, we have created several indicator variables.
 
 Sources of state eligibility variables: - (KFF tables - https://www.kff.org/report-section/medicaid-and-chip-eligibility-enrollment-and-cost-sharing-policies-as-of-january-2020-findings-from-a-50-state-survey-tables/) - (Commonwealth - https://www.commonwealthfund.org/publications/issue-briefs/2023/sep/ensuring-continuous-eligibility-medicaid-impacts-adults)
-=======
+
 Using supervised machine learning techniques and data from the Survey of Income and Participation (SIPP), we developed a model to predict the likelihood that a person would lose health insurance in the course of a year. Such a predictive model can help state and federal policymakers and other interested stakeholders target outreach and enrollment activities For example, it may be in a state's best interest to target enrollment campaigns for public insurance programs towards population groups of interest. As discussed, reducing the uninsured population can reduce health care costs for states and the federal government.
->>>>>>> 1dda7adfb889a42c35079fd339684cb2971b739a
 
 ## Data Sources
 
@@ -65,6 +64,7 @@ library(haven)
 library(data.table)
 library(readxl)
 library(lubridate)
+library(vcd)
 
 ```
 
@@ -75,7 +75,6 @@ library(lubridate)
 #initial pull of data
 data_2018 <- fread("data/pu2018.csv", 
                    sep = "|",
-<<<<<<< HEAD
                    showProgress = TRUE)
 
 
@@ -107,9 +106,6 @@ Cleaning
 ```{r}
 
 data_2019 <- data_2019 %>%
-=======
-                   showProgress = TRUE) %>% 
->>>>>>> 1dda7adfb889a42c35079fd339684cb2971b739a
     select(-starts_with("A")) # these are status flags of all variables
 
 data_2018 <- data_2018 %>% 
@@ -307,41 +303,24 @@ lost_insurance_prep <- lost_insurance_detail %>%
           by = "unique_id"
         ) %>% 
          distinct(unique_id, .keep_all = TRUE)
-      
-    #filter main data frame to only include individuals that 
-      #had medicaid at some point of the year
-      data_2019_jan <- had_medicaid %>% 
-        left_join(x = had_medicaid,y = data_2019_jan,by = "unique_id")
-
-      #GO back to lost_medicaid table to filter out those that never had medicaid to lose
-      lost_medicaid <- had_medicaid %>% 
-            left_join(x = had_medicaid, y = lost_medicaid,by = "unique_id") %>% 
-      #remove \January column, since we are not looking at people who lost coverage in January
-        #select(-January) %>%
-    #Create new field that adds together each month, where values >0 means someone lost medicaid during the year
-      mutate(
-        medicaid_lag = sum(February, March, April, May, June, July, August, September, October, November, December, na.rm = TRUE),
-        medicaid_lag = case_when(
-          medicaid_lag >= 1 ~ 1,
-          medicaid_lag < 1 ~ 0)
-      )
-
-#add in "lost medicaid" variable to january data set
- data_2019_jan <- data_2019_jan %>% 
-        left_join(x = data_2019_jan,y = lost_medicaid,by = "unique_id")
- 
- 
-insurance_gap %>% 
-   group_by(insurance_gap) %>% 
-   summarize(n())
- 
 ```
 
 ```{r}
 
 
 # tibble of indicator variables for state eligibility rules of interest
-state_eligibility_rules <- read_excel("state_eligibility_rules.xlsx")
+state_eligibility_rules <- read_excel("data/state_eligibility_rules.xlsx")
+  
+  
+
+data_2018_final <-  data_2018_final %>% 
+  mutate( state_id = TEHC_ST) %>% 
+        left_join(
+          x = .,
+          y = state_eligibility_rules,
+          by = "state_id"
+        )
+  
 
 # tibble of variables where every single value is missing (we can drop these)
 missing_vars <- data_2019 %>%
@@ -358,83 +337,95 @@ missing_vars <- data_2019 %>%
 
 ### missingness (Akbar)
 
-<<<<<<< HEAD
+
 The SIPP uses two imputation methods based on the assumption that data are missing at random within subgroups of the population. The imputation methods used are:
 
 1.  Model-based Imputation: A process that involves estimating sequential models that predict values for a missing variable, conditional on demographic data, all other topic flags earnings data within the IRS and SSA.
 2.  Sequential hot-deck imputation: This method matches a record with missing data to that of a donor with similar background characteristics
-=======
+
 -   describe why we are leaving missinging as is, since they did imputation on thier own
 -   explain missing variables in olivia's data
->>>>>>> 1dda7adfb889a42c35079fd339684cb2971b739a
 
 ### correlation (Alicia)
 
 ```{r}
-#| message: false
-#| warning: false
 
 # evaluating correlation
-numeric_predictors <- data_2018_final %>%
-  select(where(is.numeric))
+potential_predictors <- data_2018_final %>%
+  ungroup() %>% 
+  
+  select(insurance_gap,
+         
+         # all employment data
+         starts_with("EJB"),
+         
+         # medicaid eligibility
+         starts_with("elig_"),
+         
+         #adult wellbeing
+         starts_with("EAWB"),
+         
+         #food security
+         starts_with("EFOOD"),
+         
+         #demographics
+         TAGE_EHC,#Age
+         RFAMKIND,#family size
+         RFRELU18,RHNUM65OVER,
+         EORIGIN,EMS,ECITIZEN,#country of origin
+         EHOWWELL,ERACE,ESEX,#engligh proficiency,race,sex
+         RFOODS, #food security
+         RDIS, #disability status
+         EMS, #marital status
+         
+         #personal finances
+         TDEBT_AST, #personal debt
+         THINC_AST,#household income
+         TNETWORTH, #net worth
+         
+         #location
+         EAWBSAFE, #safety
+         EVOUCHER, #housing voucher
+         TEHC_ST, #state
+         TMETRO_INTV, #metropolitan area
+  )
 
+potential_predictors_num <- potential_predictors %>% 
+  select(where(is.numeric))
+        
 # Calculate correlation matrix
-correlation_matrix <- cor(numeric_predictors)
+correlation_matrix <- cor(potential_predictors_num,use = "pairwise.complete.obs")
 
 # Filter correlations above 0.5
-non_response_correlations <- correlation_matrix["insurance_gap", ]
+insurance_gap_correlations <- correlation_matrix["insurance_gap", ]
 
 # Filter correlations greater than 0.5 or less than -0.5
-significant_correlations <- non_response_correlations[abs(non_response_correlations) > 0.5]
+significant_correlations <-  insurance_gap_correlations[order(abs(insurance_gap_correlations),decreasing = TRUE)] 
 
-significant_correlations <- significant_correlations[!is.na(significant_correlations)]
+significant_correlations <- 
+    significant_correlations[!is.na(significant_correlations)] %>% 
+    head(200)
 
-# Print the significant correlations
-print(significant_correlations)
+significant_correlations <- enframe(significant_correlations,name = "variable",value = "correlation_level")
 
-
-
-# Calculate phi coefficient
-phi_coefficient <- data_2018_final %>% 
-  cor(.$insurance_gap,.$October,use = "pairwise.complete.obs")
-
-# Print the phi coefficient
-print(phi_coefficient)
-
-
-# Load the vcd package for Cramér's V calculation
-library(vcd)
-
-# Create a contingency table for two categorical variables
-cont_table <- table(categorical_variable1, categorical_variable2)
-
-# Calculate Cramér's V
-cramers_v <- assocstats(cont_table)$cramer
-
-# Create a table to display the results
-results <- data.frame(
-  Variable1 = "Categorical_Variable_1",
-  Variable2 = "Categorical_Variable_2",
-  Cramers_V = cramers_v
-)
-
-# Print the results
-print(results)
-
+significant_correlations_names <- significant_correlations %>% 
+  as_tibble() %>% 
+  select(variable) %>% 
+  pull(variable)
 
 ```
 
+### limit training/testing dataset to only include the most significant predictors
+```{r}
+
+data_2018_final_test <- data_2018_final %>% 
+  select(unique_id,
+         all_of(significant_correlations_names))
+  
+```
 ### explore categorical variables of interest (Alicia - depending on Aaron's response)
 
 -   review of categorical variables and see if there is anything crazy
-
-### explore the distribution of outcome variable
-
--   look at what month had the most one's
-
-### how do we decide what variables to drop?
-
--   explain highly correlated variables and
 
 ## Predictive Modeling
 
@@ -461,7 +452,7 @@ rf_rec <- recipe(non_return_rate ~ ., training) %>%
 
 ## Analyzing Results
 
-<<<<<<< HEAD
+
 Building the model
 
 ```{r}
@@ -510,10 +501,9 @@ rf_final |>
   vip(num_features = 20) 
 
 ```
-=======
+
 -   precision versus accuracy - justify error metric - Akbar
 -   Variable Important
->>>>>>> 1dda7adfb889a42c35079fd339684cb2971b739a
 
 ## Conclusions and Limitations
 
