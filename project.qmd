@@ -269,7 +269,18 @@ lost_insurance_prep <- lost_insurance_detail %>%
 ```{r}
 
 # tibble of indicator variables for state eligibility rules of interest
-state_eligibility_rules <- read_excel("state_eligibility_rules.xlsx")
+state_eligibility_rules <- read_excel("data/state_eligibility_rules.xlsx")
+  
+  
+
+data_2018_final <-  data_2018_final %>% 
+  mutate( state_id = TEHC_ST) %>% 
+        left_join(
+          x = .,
+          y = state_eligibility_rules,
+          by = "state_id"
+        )
+  
 
 # tibble of variables where every single value is missing (we can drop these)
 missing_vars <- data_2019 %>%
@@ -289,16 +300,28 @@ missing_vars <- data_2019 %>%
 -   describe why we are leaving missinging as is, since they did imputation on thier own
 -   explain missing variables in olivia's data
 
+
 ### correlation (Alicia)
 
 ```{r}
 
 # evaluating correlation
 potential_predictors <- data_2018_final %>%
+  ungroup() %>% 
+  
   select(insurance_gap,
          
          # all employment data
          starts_with("EJB"),
+         
+         # medicaid eligibility
+         starts_with("elig_"),
+         
+         #adult wellbeing
+         starts_with("EAWB"),
+         
+         #food security
+         starts_with("EFOOD"),
          
          #demographics
          TAGE_EHC,#Age
@@ -332,27 +355,34 @@ correlation_matrix <- cor(potential_predictors_num,use = "pairwise.complete.obs"
 insurance_gap_correlations <- correlation_matrix["insurance_gap", ]
 
 # Filter correlations greater than 0.5 or less than -0.5
-significant_correlations <- non_response_correlations[abs(non_response_correlations) > 0.7]
+significant_correlations <-  insurance_gap_correlations[order(abs(insurance_gap_correlations),decreasing = TRUE)] 
 
-significant_correlations <- significant_correlations[!is.na(significant_correlations)]
+significant_correlations <- 
+    significant_correlations[!is.na(significant_correlations)] %>% 
+    head(200)
 
-# Print the significant correlations
-print(significant_correlations)
+significant_correlations <- enframe(significant_correlations,name = "variable",value = "correlation_level")
 
+significant_correlations_names <- significant_correlations %>% 
+  as_tibble() %>% 
+  select(variable) %>% 
+  pull(variable)
+
+```
+
+### limit training/testing dataset to only include the most significant predictors
+```{r}
+
+data_2018_final_test <- data_2018_final %>% 
+  select(unique_id,
+         all_of(significant_correlations_names))
+  
 ```
 
 
 ### explore categorical variables of interest (Alicia - depending on Aaron's response)
 
 -   review of categorical variables and see if there is anything crazy
-
-### explore the distribution of outcome variable
-
--   look at what month had the most one's
-
-### how do we decide what variables to drop?
-
--   explain highly correlated variables and
 
 ## Predictive Modeling
 
