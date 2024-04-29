@@ -42,19 +42,18 @@ https://www.commonwealthfund.org/publications/issue-briefs/2022/oct/state-based-
 
 ### Methodology
 
-Using supervised machine learning techniques and the Survey of Income and Participation Data, we developed a model to predict the likelihood that a Medicaid beneficiary will churn out of the program during the course of a year; in other words, if they lose eligibility and are terminated from the program. While the main eligibility guideline for Medicaid is income, we believe that utilizing other demographic factors can be a helpful predictor of churn. Such a predictive model can help states reduce churn by targeting outreach and enrollment activities of states. For example, it may be in a state's best interest to target enrollment campaigns for other public insurance programs towards population groups of interest. This can ensure everyone who is eligible has access to the program, and can enroll people into other public programs (like a Marketplace plan) if they are eligible. Reducing the uninsured population can reduce health care costs for states.
-
-As mentioned before, states have different eligibility rules and guidelines. For example, three states allow for 12-month continuous eligibility, while others conduct periodic eligibility checks before the standard annual renewal date. To account for some of these variations, we have created several indicator variables.
-
-Sources of state eligibility variables: - (KFF tables - https://www.kff.org/report-section/medicaid-and-chip-eligibility-enrollment-and-cost-sharing-policies-as-of-january-2020-findings-from-a-50-state-survey-tables/) - (Commonwealth - https://www.commonwealthfund.org/publications/issue-briefs/2023/sep/ensuring-continuous-eligibility-medicaid-impacts-adults)
-
 Using supervised machine learning techniques and data from the Survey of Income and Participation (SIPP), we developed a model to predict the likelihood that a person would lose health insurance in the course of a year. Such a predictive model can help state and federal policymakers and other interested stakeholders target outreach and enrollment activities For example, it may be in a state's best interest to target enrollment campaigns for public insurance programs towards population groups of interest. As discussed, reducing the uninsured population can reduce health care costs for states and the federal government.
+
 
 ## Data Sources
 
 The Survey of Income and Program Participation (SIPP) is an extensive survey conducted by the U.S. Census Bureau. It contains data on income, labor force participation, social program participation and eligibility, and general demographic characteristics. We are using the SIPP given its breadth, detail, and inclusion of health insurance status. We are using data from the year 2019, which was the last full year before the start of the COVID-19 pandemic and three full years of continuous eligibility in Medicaid. Using data after 2019 would not allow us to accurately examine churn. It is important to note that survey parti
 
 Survey participants provide data for each month in the preceding calendar year at the time of the interview. Because of this detail, observations are on the person-month level, meaning there could be 12 observations for a single person for a given variable. Household-level questions are copied across all members of the household.
+
+The Medicaid program, the public health insurance program for low income individuals, varies heavily by state in terms of eligibility rules and guidelines. For example, three states allow for 12-month continuous eligibility, while others conduct periodic eligibility checks before the standard annual renewal date. To account for some of these variations, we have created several indicator variables.
+
+Sources of state eligibility variables: - (KFF tables - https://www.kff.org/report-section/medicaid-and-chip-eligibility-enrollment-and-cost-sharing-policies-as-of-january-2020-findings-from-a-50-state-survey-tables/) - (Commonwealth - https://www.commonwealthfund.org/publications/issue-briefs/2023/sep/ensuring-continuous-eligibility-medicaid-impacts-adults)
 
 ```{r}
 
@@ -75,10 +74,10 @@ library(vcd)
 data_2018 <- fread("data/pu2018.csv", 
                    sep = "|",
                    showProgress = TRUE) %>% 
-            select(-starts_with("A"))
+            select(-starts_with("A")) 
 
 
-names(data_2019) <- toupper(names(data_2018))
+names(data_2018) <- toupper(names(data_2018))
 #Make sure all the column names are upper-case
 ```
 
@@ -105,9 +104,6 @@ Cleaning
 
 ```{r}
 
-data_2019 <- data_2019 %>%
-    select(-starts_with("A")) # these are status flags of all variables
-
 data_2018 <- data_2018 %>% 
    #make unique ID for each respondent
   mutate(unique_id = paste(SSUID,PNUM))
@@ -117,7 +113,7 @@ data_2018 <- data_2018 %>%
 #Insurance Loss Coding
 
 ```{r}
-#processing outcome variable - individuals covered by medicaid that experienced a gap in coverage during 2019
+#processing outcome variable - individuals covered by insurance that experienced a gap in coverage during 2019
 lost_insurance_detail <- data_2018 %>%
   
   select(SPANEL,SSUID,SWAVE,PNUM,MONTHCODE,RHLTHMTH) %>% 
@@ -125,12 +121,12 @@ lost_insurance_detail <- data_2018 %>%
     #make unique ID for each respondent
   mutate(unique_id = paste(SSUID,PNUM))
 
-#creating variables to assess if someone lost medicaid from one quarter to the next
+#creating variables to assess if someone lost insurance from one quarter to the next
 lost_insurance_prep <- lost_insurance_detail %>% 
   arrange(unique_id,MONTHCODE) %>% 
   group_by(unique_id) %>% 
     mutate(
-      #recode health insurance bulean to be "no_insurance"
+      #recode health insurance boolean to be "no_insurance"
       no_insurance = case_when(
         RHLTHMTH == 2 ~ 1, #had no coverage whatsoever
         RHLTHMTH == 1 ~ 0 #had coverage
@@ -139,8 +135,8 @@ lost_insurance_prep <- lost_insurance_detail %>%
       #create field of "no_insurance_last_month" for each observation
       no_insurance_last_month = lag(no_insurance),
       
-      #create variable subtracting no_insurace and no_insurance last month
-      # values will = 1 when they had insurance last month,  but didn't this
+      #create variable subtracting no_insurance and no_insurance last month
+      # values will = 1 when they had insurance last month,  but didn't this month
       lost_insurance = no_insurance - no_insurance_last_month,
      
       insurance_gap = case_when(
@@ -190,8 +186,8 @@ lost_insurance_prep <- lost_insurance_detail %>%
     
 ```
 
-
 ##Medicaid Eligibility Variables
+
 ```{r}
 
 
