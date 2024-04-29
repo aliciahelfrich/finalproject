@@ -4,6 +4,7 @@ author: "Alicia Helfrich, Olivia Gomez, and Akbar Naqvi"
 format: html
 editor: visual
 embed-resources: true
+bibliography: references.bib  
 ---
 
 Outline from meeting:
@@ -26,34 +27,23 @@ Outline from meeting:
 
 ### Introduction
 
-The Patient Protection and Affordable Care Act (ACA), passed in 2010, increased access to health insurance coverage for over 20 million Americans. Yet in 2022, over 25 million Americans still did not have health insurance (KFF). Being uninsured has been shown to lead to poorer health outcomes, limited preventative care, and increased risk of mortality (NILC). Uninsurance is also associated with poor economic outcomes and increases general costs for employers, taxpayers, health systems, and the general public (Commonwealth). For example, uncompensated care for those without insurance averaged over \$42 billion between 2015 and 2017 (KFF).
+The Patient Protection and Affordable Care Act (ACA), passed in 2010, increased access to health insurance coverage for over 20 million Americans. Yet in 2022, over 25 million Americans still did not have health insurance.@tolbert2023 Being uninsured has been shown to lead to poorer health outcomes, limited preventative care, and increased risk of mortality.@thecons2014 Uninsurance is also associated with poor economic outcomes and increases general costs for employers, taxpayers, health systems, and the general public.@davis2003 For example, uncompensated care for those without insurance averaged over \$42 billion between 2015 and 2017.@coughlin2021
 
-Losing insurance can happen for a multitude of reasons, such as job loss or a change in eligibility for public insurance programs. However, getting people reenrolled in insurance can be difficult due to lack of knowledge of available programs and financial assistance, high cost of insurance, and availability (e.g. coverage offered through employment) (KFF). Due to the high social and economic costs associated with being uninsured, state and federal governments, non-profit organizations, and other interested stakeholders have launched campaigns to raise awareness on financial assistance programs, tax credits, state-based Marketplace exchanges, and Medicaid eligibility (Commonwealth). Given that the uninsured population is made up of over 25 million people, targeting campaigns can save taxpayer dollars and increase the effectiveness of the programs.
-
-https://www.kff.org/uninsured/issue-brief/key-facts-about-the-uninsured-population/
-
-https://www.nilc.org/wp-content/uploads/2015/11/consequences-of-being-uninsured-2014-08.pdf
-
-https://www.commonwealthfund.org/sites/default/files/documents/\_\_\_media_files_publications_in_the_literature_2003_jun_the_costs_and_consequences_of_being_uninsured_davis_consequences_itl_663_pdf.pdf
-
-https://www.kff.org/uninsured/issue-brief/sources-of-payment-for-uncompensated-care-for-the-uninsured/
-
-https://www.commonwealthfund.org/publications/issue-briefs/2022/oct/state-based-outreach-boosting-enrollment-uninsured
+Losing insurance can happen for a multitude of reasons, such as job loss or a change in eligibility for public insurance programs. However, getting people reenrolled in insurance can be difficult due to lack of knowledge of available programs and financial assistance, high cost of insurance, and availability (e.g. coverage offered through employment).@tolbert2023 Due to the high social and economic costs associated with being uninsured, state and federal governments, non-profit organizations, and other interested stakeholders have launched campaigns to raise awareness on financial assistance programs, tax credits, state-based Marketplace exchanges, and Medicaid eligibility.@schwab2022 Given that the uninsured population is made up of over 25 million people, targeting campaigns can save taxpayer dollars and increase the effectiveness of the programs.
 
 ### Methodology
 
 Using supervised machine learning techniques and data from the Survey of Income and Participation (SIPP), we developed a model to predict the likelihood that a person would lose health insurance in the course of a year. Such a predictive model can help state and federal policymakers and other interested stakeholders target outreach and enrollment activities For example, it may be in a state's best interest to target enrollment campaigns for public insurance programs towards population groups of interest. As discussed, reducing the uninsured population can reduce health care costs for states and the federal government.
 
-
 ## Data Sources
 
-The Survey of Income and Program Participation (SIPP) is an extensive survey conducted by the U.S. Census Bureau. It contains data on income, labor force participation, social program participation and eligibility, and general demographic characteristics. We are using the SIPP given its breadth, detail, and inclusion of health insurance status. We are using data from the year 2019, which was the last full year before the start of the COVID-19 pandemic and three full years of continuous eligibility in Medicaid. Using data after 2019 would not allow us to accurately examine churn. It is important to note that survey parti
+The Survey of Income and Program Participation (SIPP) is an extensive survey conducted by the U.S. Census Bureau. It contains data on income, labor force participation, social program participation and eligibility, and general demographic characteristics. We are using the SIPP given its breadth, detail, and inclusion of health insurance status. We are using data from the year 2018, as we wanted to use data from before the COVID-19 pandemic. We chose to use 2018 versus 2019 due to limited observations in the 2019 dataset.
 
 Survey participants provide data for each month in the preceding calendar year at the time of the interview. Because of this detail, observations are on the person-month level, meaning there could be 12 observations for a single person for a given variable. Household-level questions are copied across all members of the household.
 
-The Medicaid program, the public health insurance program for low income individuals, varies heavily by state in terms of eligibility rules and guidelines. For example, three states allow for 12-month continuous eligibility, while others conduct periodic eligibility checks before the standard annual renewal date. To account for some of these variations, we have created several indicator variables.
+The SIPP categorized health insurance into several broad categories: Private, Medicare, Medicaid, military, other health insurance coverage, and coverage under ACA (e.g. through insurance Marketplace exchanges, which were established by the ACA). Given a respondent's answer to the broad question regarding type of coverage, they are able to provide greater detail about where they received the plan. 
 
-Sources of state eligibility variables: - (KFF tables - https://www.kff.org/report-section/medicaid-and-chip-eligibility-enrollment-and-cost-sharing-policies-as-of-january-2020-findings-from-a-50-state-survey-tables/) - (Commonwealth - https://www.commonwealthfund.org/publications/issue-briefs/2023/sep/ensuring-continuous-eligibility-medicaid-impacts-adults)
+The Medicaid program, the public health insurance program for low income individuals, varies heavily by state in terms of eligibility rules and guidelines. For example, three states allow for 12-month continuous eligibility, while others conduct periodic eligibility checks before the standard annual renewal date. To account for some of these variations, we have created several indicator variables.[@buettgens2023; @brooks2020]
 
 ```{r}
 
@@ -160,7 +150,7 @@ lost_insurance_prep <- lost_insurance_detail %>%
     )
   
     
-    #create data frame of unique individuals that had medicaid at some point of the year
+    #create data frame of unique individuals that had insurance at some point of the year
       #will use to filter the lost_medicaid_prep 
       insurance_gap <-  lost_insurance_prep %>% 
         pivot_wider(
@@ -206,7 +196,86 @@ data_2018_final <-  data_2018_final %>%
 
 ## Exploratory Data Analysis
 
+### Outcome Variable Exploration
+
+We created the outcome variable insurance_gap, which indicates if the respondent lost coverage at any point over the course of a year. 
+
+```{r}
+
+summary(data_2018_final$insurance_gap)
+
+
+data_2018_final %>%
+  ggplot(mapping = aes(x = insurance_gap)) + 
+  geom_bar() +
+  geom_text(stat = 'count', aes(label = after_stat(count)))
+
+```
+There are 696 cases of insurance loss found in the data. While small compared to the count of no insurance loss, it is still a large enough n that allows for further analysis.
+
+We also wanted to explore the distributions of choice predictor variables of interest. 
+
+```{r}
+
+predictor_eda <- data_2018_final %>%
+  select(
+    EORIGIN,EMS,ECITIZEN,#country of origin
+         EHOWWELL,ERACE,ESEX,#engligh proficiency,race,sex
+         RFOODS, #food security
+         RDIS, #disability status
+         EMS, #marital status
+  ) %>%
+  summary()
+  
+predictor_eda
+
+```
+Given the focus on health insurance, we were also interested to see the distribution of coverage types in this sample. 
+
+```{r}
+
+coverage_type_plot_private <- data_2018_final %>%
+  select(
+    RPRIMTH,
+    RPUBMTH,
+  ) %>%
+  filter(
+    RPRIMTH == 1)
+
+private_plot <- coverage_type_plot_private %>%
+  ggplot(mapping = aes(x = RPRIMTH)) +
+  geom_bar() +
+  geom_text(stat = 'count', aes(label = after_stat(count)))
+
+
+coverage_type_plot_public <- data_2018_final %>%
+  select(
+    RPRIMTH,
+    RPUBMTH,
+  ) %>%
+  filter(
+    RPUBMTH == 1)
+
+public_plot <- coverage_type_plot_public %>%
+  ggplot(mapping = aes(x = RPUBMTH)) +
+  geom_bar() +
+  geom_text(stat = 'count', aes(label = after_stat(count)))
+
+```
+
+
 ### missingness (Akbar)
+
+```{r}
+
+# tibble of variables where every single value is missing (we can drop these)
+missing_vars <- data_2018_final %>%
+  summarise_all(~all(is.na(.))) %>%
+  gather(variable, is_missing) %>%
+  filter(is_missing)
+
+```
+
 
 The SIPP uses two imputation methods based on the assumption that data are missing at random within subgroups of the population. The imputation methods used are:
 
@@ -301,7 +370,11 @@ data_2018_final_test <- data_2018_final %>%
 
 ## Predictive Modeling
 
--   Describing the selection of variables
+### Variable Selection 
+
+The correlation matrix helped us narrow down on which predictors to use to predict a loss of insurance. We made sure to drop any variables that had a correlation of 1 or -1 with our outcome variable to ensure we did not have any "perfect predictors" present in our model. We noticed that many variables with strong correlations were related to labor force participation. We hypothesize this is because the largest source of private insurance in the United States is through an employer. Respondents with steady jobs are more likely to have a steady and consistent access to health insurance. 
+
+We also included variables related to age, food security, marriage status, disability, and other factors. While some variables may not have strong correlation values, we still plan to include them as predictors in our model as we do not want to use correlation alone as a deciding factor in our predictor selection. We plan to explore variable importance following the development and application of our predictive model.
 
 ```{r}
 
@@ -318,7 +391,6 @@ rf_rec <- recipe(non_return_rate ~ ., training) %>%
 ```
 
 -   see if any variables are 100% missing once we drop to Medicaid and January
--   look out for allocation flags (if it was imputed), status flags all start with A
 -   consider dropping and picking key variables in each issue area
 -   seam mismatch
 
