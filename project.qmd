@@ -42,7 +42,6 @@ https://www.commonwealthfund.org/publications/issue-briefs/2022/oct/state-based-
 
 ### Methodology
 
-
 Using supervised machine learning techniques and the Survey of Income and Participation Data, we developed a model to predict the likelihood that a Medicaid beneficiary will churn out of the program during the course of a year; in other words, if they lose eligibility and are terminated from the program. While the main eligibility guideline for Medicaid is income, we believe that utilizing other demographic factors can be a helpful predictor of churn. Such a predictive model can help states reduce churn by targeting outreach and enrollment activities of states. For example, it may be in a state's best interest to target enrollment campaigns for other public insurance programs towards population groups of interest. This can ensure everyone who is eligible has access to the program, and can enroll people into other public programs (like a Marketplace plan) if they are eligible. Reducing the uninsured population can reduce health care costs for states.
 
 As mentioned before, states have different eligibility rules and guidelines. For example, three states allow for 12-month continuous eligibility, while others conduct periodic eligibility checks before the standard annual renewal date. To account for some of these variations, we have created several indicator variables.
@@ -75,10 +74,11 @@ library(vcd)
 #initial pull of data
 data_2018 <- fread("data/pu2018.csv", 
                    sep = "|",
-                   showProgress = TRUE)
+                   showProgress = TRUE) %>% 
+            select(-starts_with("A"))
 
 
-names(data_2019) <- toupper(names(data_2019))
+names(data_2019) <- toupper(names(data_2018))
 #Make sure all the column names are upper-case
 ```
 
@@ -112,123 +112,6 @@ data_2018 <- data_2018 %>%
    #make unique ID for each respondent
   mutate(unique_id = paste(SSUID,PNUM))
   
-
-#filtering by one month to have unique set of individuals with demographics
-#data_2019_jan <- data_2018 %>%
- # select(-starts_with("A")) %>%
-  # only include those that had medicaid
- # filter(RPUBTYPE2 == 1) %>% 
-  # create unique identifier record
- #  mutate(unique_id = paste(SSUID,PNUM)) %>% 
-#  distinct(unique_id)
-
-```
-
-### Adding the variable "lost_medicaid_coverage" to the January filtered dataset - SKIP
-
-```{r}
-
-#processing outcome variable - individuals covered by medicaid that experienced a gap in coverage during 2019
-lost_medicaid_detail <- data_2018 %>%
-  
-  select(SPANEL,SSUID,SWAVE,PNUM,MONTHCODE,RHLTHMTH,RPUBTYPE2) %>% 
-  
-    #make unique ID for each respondent
-  mutate(unique_id = paste(SSUID,PNUM))
-
-#creating variables to assess if someone lost medicaid from one quarter to the next
-lost_medicaid_prep <- lost_medicaid_detail %>% 
-  arrange(unique_id,MONTHCODE) %>% 
-  group_by(unique_id) %>% 
-    mutate(
-      #recode health insurance bulean to be "no_insurance"
-      no_insurance = case_when(
-        RHLTHMTH == 2 ~ 1, #had no coverage whatsoever
-        RHLTHMTH == 1 ~ 0 #had coverage
-      ),
-      #recode medicaid bulean to be "medicaid"
-      medicaid = case_when(
-        RPUBTYPE2 == 1 ~ 1, #had medicaid specifically
-        RPUBTYPE2 == 2 ~ 0 #didn't have medicaid
-      ),
-      
-      #create field of "medicaid_last_month" for each observation
-      medicaid_last_month = lag(medicaid),
-      
-      #create variable adding "no_insurance" & "medicaid" so that values that
-      # = 2 mean someone experienced a lag in medicaid
-      lost_medicaid = medicaid_last_month + no_insurance) %>% 
-    filter(lost_medicaid == 2) 
-      
-      lost_medicaid = case_when(
-        lost_medicaid == 2 ~ 1,
-        lost_medicaid < 2 ~ 0
-      )
-      
-      #rename month columns
-      month = case_when(
-        MONTHCODE == 1 ~ "January",
-        MONTHCODE == 2 ~ "February",
-        MONTHCODE == 3 ~ "March",
-        MONTHCODE == 4 ~ "April",
-        MONTHCODE == 5 ~ "May",
-        MONTHCODE == 6 ~ "June",
-        MONTHCODE == 7 ~ "July",
-        MONTHCODE == 8 ~ "August",
-        MONTHCODE == 9 ~ "September",
-        MONTHCODE == 10 ~ "October",
-        MONTHCODE == 11 ~ "November",
-        MONTHCODE == 12 ~ "December")
-    ) 
-  
-    
-    #create data frame of unique individuals that had medicaid at some point of the year
-      #will use to filter the lost_medicaid_prep 
-      had_medicaid <-  lost_medicaid_prep %>% 
-        pivot_wider(
-      id_cols = unique_id, 
-      names_from = month,
-      values_from = medicaid) %>% 
-        #column to assess if someone had medicaid
-        mutate(
-       months_medicaid = sum(January,February, March, April, May, June, July, August, September, October, November, December, na.rm = TRUE),
-        months_medicaid = case_when(
-          months_medicaid >= 1 ~ 1,
-          months_medicaid < 1 ~ 0)
-      ) %>% 
-        select(unique_id,months_medicaid) %>% 
-        #filter out the people that didn't have any medicaid at all
-        filter(months_medicaid == 1)
-      
-      
-    #filter main data frame to only include individuals that 
-      #had medicaid at some point of the year
-      data_2019_jan <- had_medicaid %>% 
-        left_join(x = had_medicaid,y = data_2019_jan,by = "unique_id")
-
-      
-      #GO back to lost_medicaid table to filter out those that never had medicaid to lose
-      lost_medicaid <- had_medicaid %>% 
-            left_join(x = had_medicaid, y = lost_medicaid,by = "unique_id") %>% 
-      #remove \January column, since we are not looking at people who lost coverage in January
-        #select(-January) %>%
-    #Create new field that adds together each month, where values >0 means someone lost medicaid during the year
-      mutate(
-        medicaid_lag = sum(February, March, April, May, June, July, August, September, October, November, December, na.rm = TRUE),
-        medicaid_lag = case_when(
-          medicaid_lag >= 1 ~ 1,
-          medicaid_lag < 1 ~ 0)
-      )
-
-#add in "lost medicaid" varaible to january dataset
- data_2019_jan <- data_2019_jan %>% 
-        left_join(x = data_2019_jan,y = lost_medicaid,by = "unique_id")
- 
- 
- data_2019_jan %>% 
-   group_by(medicaid_lag) %>% 
-   summarize(n())
- 
 ```
 
 #Insurance Loss Coding
@@ -303,16 +186,18 @@ lost_insurance_prep <- lost_insurance_detail %>%
           by = "unique_id"
         ) %>% 
          distinct(unique_id, .keep_all = TRUE)
+      
+    
 ```
 
+
+##Medicaid Eligibility Variables
 ```{r}
 
 
 # tibble of indicator variables for state eligibility rules of interest
 state_eligibility_rules <- read_excel("data/state_eligibility_rules.xlsx")
   
-  
-
 data_2018_final <-  data_2018_final %>% 
   mutate( state_id = TEHC_ST) %>% 
         left_join(
@@ -320,23 +205,12 @@ data_2018_final <-  data_2018_final %>%
           y = state_eligibility_rules,
           by = "state_id"
         )
-  
-
-# tibble of variables where every single value is missing (we can drop these)
-missing_vars <- data_2019 %>%
-  summarise_all(~all(is.na(.))) %>%
-  gather(variable, is_missing) %>%
-  filter(is_missing) %>% 
-  mutate(
-  
-  )
 
 ```
 
 ## Exploratory Data Analysis
 
 ### missingness (Akbar)
-
 
 The SIPP uses two imputation methods based on the assumption that data are missing at random within subgroups of the population. The imputation methods used are:
 
@@ -416,6 +290,7 @@ significant_correlations_names <- significant_correlations %>%
 ```
 
 ### limit training/testing dataset to only include the most significant predictors
+
 ```{r}
 
 data_2018_final_test <- data_2018_final %>% 
@@ -423,6 +298,7 @@ data_2018_final_test <- data_2018_final %>%
          all_of(significant_correlations_names))
   
 ```
+
 ### explore categorical variables of interest (Alicia - depending on Aaron's response)
 
 -   review of categorical variables and see if there is anything crazy
@@ -451,7 +327,6 @@ rf_rec <- recipe(non_return_rate ~ ., training) %>%
 -   seam mismatch
 
 ## Analyzing Results
-
 
 Building the model
 
