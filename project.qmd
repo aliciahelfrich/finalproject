@@ -4,57 +4,36 @@ author: "Alicia Helfrich, Olivia Gomez, and Akbar Naqvi"
 format: html
 editor: visual
 embed-resources: true
+bibliography: references.bib  
 ---
 
-Outline from meeting:
-
--   Lit review
-
--   Overview of data sources
-
--   Exploratory Data Analysis and Data Cleaning
-
--   Building Models
-
--   Analyzing results - variable importance
-
--   Conclusion Limitations
-
--   download file for data folder: (Data and Documents - Primary Data File) link: https://www.census.gov/programs-surveys/sipp/data/datasets/2018-data/2018.html Download the Pipe-Delimited Text Format version to read in a CSV
+-   download file for data folder: (Data and Documents - Primary Data File) link: https://www.census.gov/programs-surveys/sipp/data/datasets/2019-data/2019.html Download the Pipe-Delimited Text Format version to read in a CSV
 
 ## Project Overview
 
 ### Introduction
 
-The Patient Protection and Affordable Care Act (ACA), passed in 2010, increased access to health insurance coverage for over 20 million Americans. Yet in 2022, over 25 million Americans still did not have health insurance (KFF). Being uninsured has been shown to lead to poorer health outcomes, limited preventative care, and increased risk of mortality (NILC). Uninsurance is also associated with poor economic outcomes and increases general costs for employers, taxpayers, health systems, and the general public (Commonwealth). For example, uncompensated care for those without insurance averaged over \$42 billion between 2015 and 2017 (KFF).
+The Patient Protection and Affordable Care Act (ACA), passed in 2010, increased access to health insurance coverage for over 20 million Americans. Yet in 2022, over 25 million Americans still did not have health insurance.\@tolbert2023 Being uninsured has been shown to lead to poorer health outcomes, limited preventative care, and increased risk of mortality.\@thecons2014 Uninsurance is also associated with poor economic outcomes and increases general costs for employers, taxpayers, health systems, and the general public.\@davis2003 For example, uncompensated care for those without insurance averaged over \$42 billion between 2015 and 2017.\@coughlin2021
 
-Losing insurance can happen for a multitude of reasons, such as job loss or a change in eligibility for public insurance programs. However, getting people reenrolled in insurance can be difficult due to lack of knowledge of available programs and financial assistance, high cost of insurance, and availability (e.g. coverage offered through employment) (KFF). Due to the high social and economic costs associated with being uninsured, state and federal governments, non-profit organizations, and other interested stakeholders have launched campaigns to raise awareness on financial assistance programs, tax credits, state-based Marketplace exchanges, and Medicaid eligibility (Commonwealth). Given that the uninsured population is made up of over 25 million people, targeting campaigns can save taxpayer dollars and increase the effectiveness of the programs.
-
-https://www.kff.org/uninsured/issue-brief/key-facts-about-the-uninsured-population/
-
-https://www.nilc.org/wp-content/uploads/2015/11/consequences-of-being-uninsured-2014-08.pdf
-
-https://www.commonwealthfund.org/sites/default/files/documents/\_\_\_media_files_publications_in_the_literature_2003_jun_the_costs_and_consequences_of_being_uninsured_davis_consequences_itl_663_pdf.pdf
-
-https://www.kff.org/uninsured/issue-brief/sources-of-payment-for-uncompensated-care-for-the-uninsured/
-
-https://www.commonwealthfund.org/publications/issue-briefs/2022/oct/state-based-outreach-boosting-enrollment-uninsured
+Losing insurance can happen for a multitude of reasons, such as job loss or a change in eligibility for public insurance programs. However, getting people reenrolled in insurance can be difficult due to lack of knowledge of available programs and financial assistance, high cost of insurance, and availability (e.g. coverage offered through employment).\@tolbert2023 Due to the high social and economic costs associated with being uninsured, state and federal governments, non-profit organizations, and other interested stakeholders have launched campaigns to raise awareness on financial assistance programs, tax credits, state-based Marketplace exchanges, and Medicaid eligibility.\@schwab2022 Given that the uninsured population is made up of over 25 million people, targeting campaigns can save taxpayer dollars and increase the effectiveness of the programs.
 
 ### Methodology
 
-Using supervised machine learning techniques and the Survey of Income and Participation Data, we developed a model to predict the likelihood that a Medicaid beneficiary will churn out of the program during the course of a year; in other words, if they lose eligibility and are terminated from the program. While the main eligibility guideline for Medicaid is income, we believe that utilizing other demographic factors can be a helpful predictor of churn. Such a predictive model can help states reduce churn by targeting outreach and enrollment activities of states. For example, it may be in a state's best interest to target enrollment campaigns for other public insurance programs towards population groups of interest. This can ensure everyone who is eligible has access to the program, and can enroll people into other public programs (like a Marketplace plan) if they are eligible. Reducing the uninsured population can reduce health care costs for states.
-
-As mentioned before, states have different eligibility rules and guidelines. For example, three states allow for 12-month continuous eligibility, while others conduct periodic eligibility checks before the standard annual renewal date. To account for some of these variations, we have created several indicator variables.
-
-Sources of state eligibility variables: - (KFF tables - https://www.kff.org/report-section/medicaid-and-chip-eligibility-enrollment-and-cost-sharing-policies-as-of-january-2020-findings-from-a-50-state-survey-tables/) - (Commonwealth - https://www.commonwealthfund.org/publications/issue-briefs/2023/sep/ensuring-continuous-eligibility-medicaid-impacts-adults)
+**NEED TO DESCRIBE OUR MOTIVATING QUESTION**
 
 Using supervised machine learning techniques and data from the Survey of Income and Participation (SIPP), we developed a model to predict the likelihood that a person would lose health insurance in the course of a year. Such a predictive model can help state and federal policymakers and other interested stakeholders target outreach and enrollment activities For example, it may be in a state's best interest to target enrollment campaigns for public insurance programs towards population groups of interest. As discussed, reducing the uninsured population can reduce health care costs for states and the federal government.
 
 ## Data Sources
 
-The Survey of Income and Program Participation (SIPP) is an extensive survey conducted by the U.S. Census Bureau. It contains data on income, labor force participation, social program participation and eligibility, and general demographic characteristics. We are using the SIPP given its breadth, detail, and inclusion of health insurance status. We are using data from the year 2018, which was the last full year before the start of the COVID-19 pandemic and three full years of continuous eligibility in Medicaid. Using data after 2018 would not allow us to accurately examine churn. It is important to note that survey parti
+### Survey of Income and Program Participation
+
+The Survey of Income and Program Participation (SIPP) is an extensive survey conducted by the U.S. Census Bureau. It contains data on income, labor force participation, social program participation and eligibility, and general demographic characteristics. We are using the SIPP given its breadth, detail, and inclusion of health insurance status. We are using data from the year 2018, as we wanted to use data from before the COVID-19 pandemic. We chose to use 2018 versus 2019 due to limited observations in the 2019 dataset.
 
 Survey participants provide data for each month in the preceding calendar year at the time of the interview. Because of this detail, observations are on the person-month level, meaning there could be 12 observations for a single person for a given variable. Household-level questions are copied across all members of the household.
+
+The SIPP categorized health insurance into several broad categories: Private, Medicare, Medicaid, military, other health insurance coverage, and coverage under ACA (e.g. through insurance Marketplace exchanges, which were established by the ACA). Given a respondent's answer to the broad question regarding type of coverage, they are able to provide greater detail about where they received the plan.
+
+The Medicaid program, the public health insurance program for low income individuals, varies heavily by state in terms of eligibility rules and guidelines. For example, three states allow for 12-month continuous eligibility, while others conduct periodic eligibility checks before the standard annual renewal date. To account for some of these variations, we have created several indicator variables.[@buettgens2023; @brooks2020]
 
 ```{r}
 
@@ -64,6 +43,8 @@ library(data.table)
 library(readxl)
 library(lubridate)
 library(vcd)
+library(caret)
+library(tidymodels)
 
 ```
 
@@ -74,214 +55,67 @@ library(vcd)
 #initial pull of data
 data_2018 <- fread("data/pu2018.csv", 
                    sep = "|",
-                   showProgress = TRUE)
+                   showProgress = TRUE) %>% 
+            select(-starts_with("A")) 
 
 
 names(data_2018) <- toupper(names(data_2018))
 #Make sure all the column names are upper-case
 ```
 
-Weights
+### Weighting Data
+
+**NEED TO EXPLAIN WHY WEIGHTING AND WHAT WE DID**
 
 ```{r}
 
-rw_2018 <- fread("data/rw2018.csv", 
+rw_2019 <- fread("data/rw2019.csv", 
                    sep = "|",
                    showProgress = TRUE)
 #Read in the replicate-weight data. This dataset is small enough that most machines
 #	can read the whole file into memory
 
-names(rw_2018) <- toupper(names(rw_2018))
+names(rw_2019) <- toupper(names(rw_2019))
 #Make sure all the column names are upper-case
 
 
-data_2018 <- left_join(data_2018, rw_2018, by = c("SSUID","PNUM","MONTHCODE", "SPANEL", "SWAVE"))
+data_2019 <- left_join(data_2019, rw_2019, by = c("SSUID","PNUM","MONTHCODE"))
 #Merge primary data and replicate weights on SSUID, PNUM, MONTHCODE, SPANEL, and SWAVE
+
 
 ```
 
-Cleaning
+
+### Creating Unique Respondent IDs
+
+SIPP data is divided into annual "panels" with sub "waves", and sub "sample groups. Each observation in the dataset represents a particular individual during a month. In order to analyze a loss or gain in insurance over the course of a year, we needed to create a unique identifier for each respondent. This was done through a combination of the SSUID, which was a subgroup number unique within a particular annual data, and PNUM, which was unique within each SSUID. The combination of SSUID and PNUM allowed us to assess insurance loss for each respondent and then eventually group observations by the individual. 
 
 ```{r}
-
-data_2018 <- data_2018 %>%
-    select(-starts_with("A")) # these are status flags of all variables
 
 data_2018 <- data_2018 %>% 
    #make unique ID for each respondent
   mutate(unique_id = paste(SSUID,PNUM))
   
-
-#filtering by one month to have unique set of individuals with demographics
-data_2018_jan <- data_2018 %>%
-  select(-starts_with("A")) %>%
-  #only include those that had medicaid
-filter(RPUBTYPE2 == 1) %>% 
-  #create unique identifier record
-mutate(unique_id = paste(SSUID,PNUM)) %>% 
-distinct(unique_id)
-
-```
-
-### Adding the variable "lost_medicaid_coverage" to the January filtered dataset - SKIP
-
-```{r}
-
-#processing outcome variable - individuals covered by medicaid that experienced a gap in coverage during 2018
-lost_medicaid_detail <- data_2018 %>%
-  
-  select(SPANEL,SSUID,SWAVE,PNUM,MONTHCODE,RHLTHMTH,RPUBTYPE2) %>% 
-  
-    #make unique ID for each respondent
-  mutate(unique_id = paste(SSUID,PNUM))
-
-#creating variables to assess if someone lost medicaid from one quarter to the next
-lost_medicaid_prep <- lost_medicaid_detail %>% 
-  arrange(unique_id,MONTHCODE) %>% 
-  group_by(unique_id) %>% 
-    mutate(
-      #recode health insurance bulean to be "no_insurance"
-      no_insurance = case_when(
-        RHLTHMTH == 2 ~ 1, #had no coverage whatsoever
-        RHLTHMTH == 1 ~ 0 #had coverage
-      ),
-      #recode medicaid bulean to be "medicaid"
-      medicaid = case_when(
-        RPUBTYPE2 == 1 ~ 1, #had medicaid specifically
-        RPUBTYPE2 == 2 ~ 0 #didn't have medicaid
-      ),
-      
-      #create field of "medicaid_last_month" for each observation
-      medicaid_last_month = lag(medicaid),
-      
-      #create variable adding "no_insurance" & "medicaid" so that values that
-      # = 2 mean someone experienced a lag in medicaid
-      lost_medicaid = medicaid_last_month + no_insurance) %>% 
-    filter(lost_medicaid == 2) 
-      
-      lost_medicaid = case_when(
-        lost_medicaid == 2 ~ 1,
-        lost_medicaid < 2 ~ 0
-      )
-      
-      #rename month columns
-      month = case_when(
-        MONTHCODE == 1 ~ "January",
-        MONTHCODE == 2 ~ "February",
-        MONTHCODE == 3 ~ "March",
-        MONTHCODE == 4 ~ "April",
-        MONTHCODE == 5 ~ "May",
-        MONTHCODE == 6 ~ "June",
-        MONTHCODE == 7 ~ "July",
-        MONTHCODE == 8 ~ "August",
-        MONTHCODE == 9 ~ "September",
-        MONTHCODE == 10 ~ "October",
-        MONTHCODE == 11 ~ "November",
-        MONTHCODE == 12 ~ "December")
-    
-  
-    
-    #create data frame of unique individuals that had medicaid at some point of the year
-      #will use to filter the lost_medicaid_prep 
-      had_medicaid <-  lost_medicaid_prep %>% 
-        pivot_wider(
-      id_cols = unique_id, 
-      names_from = month,
-      values_from = medicaid) %>% 
-        #column to assess if someone had medicaid
-        mutate(
-       months_medicaid = sum(January,February, March, April, May, June, July, August, September, October, November, December, na.rm = TRUE),
-        months_medicaid = case_when(
-          months_medicaid >= 1 ~ 1,
-          months_medicaid < 1 ~ 0)
-      ) %>% 
-        select(unique_id,months_medicaid) %>% 
-        #filter out the people that didn't have any medicaid at all
-        filter(months_medicaid == 1)
-      
-      
-    #filter main data frame to only include individuals that 
-      #had medicaid at some point of the year
-      data_2018_jan <- had_medicaid %>% 
-        left_join(x = had_medicaid,y = data_2018_jan,by = "unique_id")
-
-      
-      #GO back to lost_medicaid table to filter out those that never had medicaid to lose
-lost_medicaid_prep <- lost_medicaid_detail %>%
-  arrange(unique_id, MONTHCODE) %>%
-  group_by(unique_id) %>%
-  mutate(
-    # Recode health insurance boolean to be "no_insurance"
-    no_insurance = case_when(
-      RHLTHMTH == 2 ~ 1, # Had no coverage whatsoever
-      RHLTHMTH == 1 ~ 0 # Had coverage
-    ),
-    # Recode medicaid boolean to be "medicaid"
-    medicaid = case_when(
-      RPUBTYPE2 == 1 ~ 1, # Had medicaid specifically
-      RPUBTYPE2 == 2 ~ 0 # Didn't have medicaid
-    ),
-    
-    # Create field of "medicaid_last_month" for each observation
-    medicaid_last_month = lag(medicaid),
-    
-    # Create variable adding "no_insurance" & "medicaid" so that values that
-    # = 2 mean someone experienced a lag in medicaid
-    lost_medicaid = medicaid_last_month + no_insurance
-  ) %>%
-  filter(lost_medicaid == 2) %>%
-  mutate(
-    lost_medicaid = case_when(
-      lost_medicaid == 2 ~ 1,
-      lost_medicaid < 2 ~ 0
-    ),
-    
-    # Rename month columns
-    month = case_when(
-      MONTHCODE == 1 ~ "January",
-      MONTHCODE == 2 ~ "February",
-      MONTHCODE == 3 ~ "March",
-      MONTHCODE == 4 ~ "April",
-      MONTHCODE == 5 ~ "May",
-      MONTHCODE == 6 ~ "June",
-      MONTHCODE == 7 ~ "July",
-      MONTHCODE == 8 ~ "August",
-      MONTHCODE == 9 ~ "September",
-      MONTHCODE == 10 ~ "October",
-      MONTHCODE == 11 ~ "November",
-      MONTHCODE == 12 ~ "December"
-    )
-  )
-
-
-#add in "lost medicaid" varaible to january dataset
- data_2018_jan <- data_2018_jan %>% 
-        left_join(y = lost_medicaid_prep,by = "unique_id")
- 
- 
- data_2018_jan %>% 
-   group_by(medicaid_lag) %>% 
-   summarize(n())
- 
 ```
 
 #Insurance Loss Coding
+The SIPP doesn't have an explicit variable that indicates if someone lost insurance, particularly on a month by month basis. Therefore, we needed to use available data to generate a variable for "insurance_gap", which is a dummy variable that denotes if an individual who started the year with insurance experienced a gap later in the year. 
 
 ```{r}
-#processing outcome variable - individuals covered by medicaid that experienced a gap in coverage during 2018
+#create a separate tibble to calculate insurance gap, limiting to only participant IDs and 
+#RHLTHMTH, which is the variable capturing if someone had any kind of insurance or not
 lost_insurance_detail <- data_2018 %>%
   
   select(SPANEL,SSUID,SWAVE,PNUM,MONTHCODE,RHLTHMTH) %>% 
-  
-    #make unique ID for each respondent
   mutate(unique_id = paste(SSUID,PNUM))
 
-#creating variables to assess if someone lost medicaid from one quarter to the next
 lost_insurance_prep <- lost_insurance_detail %>% 
+  
+  #sort observations so that it is in order of individuals in chronological order
   arrange(unique_id,MONTHCODE) %>% 
   group_by(unique_id) %>% 
     mutate(
-      #recode health insurance bulean to be "no_insurance"
+      #recode health insurance field to be a new "no_insurance"
       no_insurance = case_when(
         RHLTHMTH == 2 ~ 1, #had no coverage whatsoever
         RHLTHMTH == 1 ~ 0 #had coverage
@@ -290,15 +124,15 @@ lost_insurance_prep <- lost_insurance_detail %>%
       #create field of "no_insurance_last_month" for each observation
       no_insurance_last_month = lag(no_insurance),
       
-      #create variable subtracting no_insurace and no_insurance last month
-      # values will = 1 when they had insurance last month,  but didn't this
+      #create variable subtracting no_insurance and no_insurance last month
+      # values will = 1 when they had insurance last month, but didn't this month
       lost_insurance = no_insurance - no_insurance_last_month,
      
       insurance_gap = case_when(
         lost_insurance > 0  ~ 1,
         lost_insurance <= 0 ~ 0),
      
-      #rename month columns
+      #rename month columns to make a clean cross-tabluar table
       month = case_when(
         MONTHCODE == 1 ~ "January",
         MONTHCODE == 2 ~ "February",
@@ -315,21 +149,27 @@ lost_insurance_prep <- lost_insurance_detail %>%
     )
   
     
-    #create data frame of unique individuals that had medicaid at some point of the year
-      #will use to filter the lost_medicaid_prep 
+    #create data frame of unique individuals that had insurance at some point of the year
       insurance_gap <-  lost_insurance_prep %>% 
         pivot_wider(
       id_cols = unique_id, 
       names_from = month,
       values_from = insurance_gap) %>% 
-        #column to assess if someone had medicaid
+        
+        #add a new binary variable that counts the months somone lost insurance during the month
         mutate(
        month_of_insurance_loss = sum(January,February, March, April, May, June, July, August, September, October, November, December, na.rm = TRUE),
+       
+       #create dummy variable for "1" if someone lost insurance during the year
+       # "0" if they didn't experience a new loss during the year
         insurance_gap = case_when(
           month_of_insurance_loss > 0 ~ 1,
           month_of_insurance_loss < 1 ~ 0)
         )
     
+    #update the original data frame so that it is organized by unique individuals
+      #The final dataset will keep demographic variables, etc from January/the first observation
+      #But will add in the months that someone lost coverage and the new "insurance_gap" variable
       data_2018_final <- insurance_gap %>% 
         left_join(
           x = .,
@@ -337,16 +177,19 @@ lost_insurance_prep <- lost_insurance_detail %>%
           by = "unique_id"
         ) %>% 
          distinct(unique_id, .keep_all = TRUE)
+      
+    
 ```
+
+##Medicaid Eligibility Variables
 
 ```{r}
 
-
 # tibble of indicator variables for state eligibility rules of interest
 state_eligibility_rules <- read_excel("data/state_eligibility_rules.xlsx")
-  
-  
 
+# create new variables representing the type of eligbility rule that applys to the
+  #state of residence of the respondent (as of January 2018)
 data_2018_final <-  data_2018_final %>% 
   mutate( state_id = TEHC_ST) %>% 
         left_join(
@@ -354,22 +197,91 @@ data_2018_final <-  data_2018_final %>%
           y = state_eligibility_rules,
           by = "state_id"
         )
-  
-
-# tibble of variables where every single value is missing (we can drop these)
-missing_vars <- data_2018 %>%
-  summarise_all(~all(is.na(.))) %>%
-  gather(variable, is_missing) %>%
-  filter(is_missing) %>% 
-  mutate(
-  
-  )
 
 ```
 
 ## Exploratory Data Analysis
 
+### Outcome Variable Exploration
+
+We created the outcome variable insurance_gap, which indicates if the respondent lost coverage at any point over the course of a year.
+
+```{r}
+
+summary(data_2018_final$insurance_gap)
+
+
+data_2018_final %>%
+  ggplot(mapping = aes(x = insurance_gap)) + 
+  geom_bar() +
+  geom_text(stat = 'count', aes(label = after_stat(count)))
+
+```
+
+There are 696 cases of insurance loss found in the data. While small compared to the count of no insurance loss, it is still a large enough n that allows for further analysis. Additionally, this represents 1% of the total sample. If the assumption of broader generalization to the US population holds, 1% of the insurance holding population would be substantial enough of elicit a policy response.
+
+We also wanted to explore the distributions of choice predictor variables of interest.
+
+```{r}
+
+predictor_eda <- data_2018_final %>%
+  select(
+    EORIGIN,EMS,ECITIZEN,#country of origin
+         EHOWWELL,ERACE,ESEX,#engligh proficiency,race,sex
+         RFOODS, #food security
+         RDIS, #disability status
+         EMS, #marital status
+  ) %>%
+  summary()
+  
+predictor_eda
+
+```
+
+Given the focus on health insurance, we were also interested to see the distribution of coverage types in this sample.
+
+```{r}
+
+coverage_type_plot_private <- data_2018_final %>%
+  select(
+    RPRIMTH,
+    RPUBMTH,
+  ) %>%
+  filter(
+    RPRIMTH == 1)
+
+private_plot <- coverage_type_plot_private %>%
+  ggplot(mapping = aes(x = RPRIMTH)) +
+  geom_bar() +
+  geom_text(stat = 'count', aes(label = after_stat(count)))
+
+
+coverage_type_plot_public <- data_2018_final %>%
+  select(
+    RPRIMTH,
+    RPUBMTH,
+  ) %>%
+  filter(
+    RPUBMTH == 1)
+
+public_plot <- coverage_type_plot_public %>%
+  ggplot(mapping = aes(x = RPUBMTH)) +
+  geom_bar() +
+  geom_text(stat = 'count', aes(label = after_stat(count)))
+
+```
+
 ### missingness (Akbar)
+
+```{r}
+
+# tibble of variables where every single value is missing (we can drop these)
+missing_vars <- data_2018_final %>%
+  summarise_all(~all(is.na(.))) %>%
+  gather(variable, is_missing) %>%
+  filter(is_missing)
+
+```
 
 The SIPP uses two imputation methods based on the assumption that data are missing at random within subgroups of the population. The imputation methods used are:
 
@@ -379,16 +291,28 @@ The SIPP uses two imputation methods based on the assumption that data are missi
 -   describe why we are leaving missinging as is, since they did imputation on thier own
 -   explain missing variables in olivia's data
 
-### correlation (Alicia)
+### Exploring Correlations with Insurance Gaps
+
+In preparation for developing our predictive model, we decided to narrow down potential predictors, given the computational costs of fitting a model with over 2,800 variables (we experienced challenges processing both a correlation matrix and model fitting with this quantity. In response, we decided to use an intelligent approach, combining both data and subject matter expertise to narrow down to a reduced number of variables.
+
+First, we used subject matter knowledge to select broader of variables that could be easily associated with an individual losing insurance and therefore likely to build a stronger predictive model.
+
+-   **Employment Information**: Given that most individuals with health insurance have a private plan through their employer, we hypothesize that variables capturing employment would lend to a more effective model.For example - certain sectors may be volatile and therefore someone may be more likely to lose insurance within a given year. Note - in our process of review, we discovered that several variables were perfectly correlated with insurance loss, based on skip logic within the survey. These variables have been removed at the bottom of the following code chunk.
+-   **State Medicaid Eligibility Policies** While many individuals have private insurance, another common coverage method is medicaid. As previously mentioned, eligibility requirements vary greatly from state to state. Therefore, it is likely that these underlying trends in eligibility may cause someone to be more or less likely to lose coverage if they lose employment or based on access to this public option. For this reason, we added the Medicaid and CHIP eligibility variables that we joined into our data.
+-   **Demographic Features**: Given well documented health disparities in different racial, ethnic, and socioeconomic groups, we added included these variables for the correlation analysis. Additionally, we opted to add in marital status and family size, given that families with spouses or more workers would have more options to continue coverage as a supplementary policy holder, even if losing their individual insurance.
 
 ```{r}
+
+near_zero_cols <- names(data_2018_final)[nearZeroVar(data_2018_final)]
+
+data_2018_variables_zvar <- data_2018_final %>%
+  ungroup() %>% 
+  select(-all_of(near_zero_cols))
 
 # evaluating correlation
 potential_predictors <- data_2018_final %>%
   ungroup() %>% 
-  
-  select(insurance_gap,
-         
+  select(-all_of(near_zero_cols),
          # all employment data
          starts_with("EJB"),
          
@@ -423,24 +347,29 @@ potential_predictors <- data_2018_final %>%
          TMETRO_INTV, #metropolitan area
   )
 
+#narrow list to numeric predictors to allow for correlation matrix
 potential_predictors_num <- potential_predictors %>% 
   select(where(is.numeric))
-        
+
 # Calculate correlation matrix
 correlation_matrix <- cor(potential_predictors_num,use = "pairwise.complete.obs")
 
-# Filter correlations above 0.5
+
+# Filter correlations to only show associations with insurance_gap
 insurance_gap_correlations <- correlation_matrix["insurance_gap", ]
 
-# Filter correlations greater than 0.5 or less than -0.5
+# Sort correlations in descending order, to later filer
 significant_correlations <-  insurance_gap_correlations[order(abs(insurance_gap_correlations),decreasing = TRUE)] 
 
+#Take the top 200 correlations to include within the model
 significant_correlations <- 
     significant_correlations[!is.na(significant_correlations)] %>% 
     head(200)
 
+# Convert the vector created in the prior step to a tibble
 significant_correlations <- enframe(significant_correlations,name = "variable",value = "correlation_level")
 
+#take the names of variables and put into a separate tibble 
 significant_correlations_names <- significant_correlations %>% 
   as_tibble() %>% 
   select(variable) %>% 
@@ -448,42 +377,25 @@ significant_correlations_names <- significant_correlations %>%
 
 ```
 
-### limit training/testing dataset to only include the most significant predictors
+After assessing the top 200 variables associated with insurance_gap, we filtered our raw dataset to only include the unique_id and most correlated variables.
 
 ```{r}
 
-data_2018_final_test <- data_2018_final %>% 
+data_2018_final_corr <- data_2018_final %>% 
   select(unique_id,
          all_of(significant_correlations_names))
+
+data_2018_all_zvar <- data_2018_final
   
 ```
 
-### explore categorical variables of interest (Alicia - depending on Aaron's response)
-
--   review of categorical variables and see if there is anything crazy
-
 ## Predictive Modeling
 
--   Describing the selection of variables
+### Variable Selection
 
-```{r}
+The correlation matrix helped us narrow down on which predictors to use to predict a loss of insurance. We made sure to drop any variables that had a correlation of 1 or -1 with our outcome variable to ensure we did not have any "perfect predictors" present in our model. We noticed that many variables with strong correlations were related to labor force participation. We hypothesize this is because the largest source of private insurance in the United States is through an employer. Respondents with steady jobs are more likely to have a steady and consistent access to health insurance.
 
-## Alicia's feature engineering example for the random forest model from assignment 7 
-
-rf_rec <- recipe(non_return_rate ~ ., training) %>% 
-  ## remove categorical variables with many categories
-    update_role(state_name, county_name,low_response_score,gidtr, 
-                 pct_tea_update_leave_cen_2010, new_role = "id") %>%
-      step_rm(has_role("id")) %>%
-  ## impute missing values
-  step_impute_mean(all_numeric_predictors()) 
- 
-```
-
--   see if any variables are 100% missing once we drop to Medicaid and January
--   look out for allocation flags (if it was imputed), status flags all start with A
--   consider dropping and picking key variables in each issue area
--   seam mismatch
+We also included variables related to age, food security, marriage status, disability, and other factors. While some variables may not have strong correlation values, we still plan to include them as predictors in our model as we do not want to use correlation alone as a deciding factor in our predictor selection. We plan to explore variable importance following the development and application of our predictive model.
 
 ## Analyzing Results
 
@@ -494,8 +406,8 @@ Building the model
 vars <- "variables"
 id_vars <- "id_variables"
 
-rf_rec <- recipe(non_return_rate ~ vars., data_2018) |>
-  add_role(id_vars, new_role = "id") |>
+rf_rec <- recipe(non_return_rate ~ vars., data_2019) |>
+  update_role(id_vars, new_role = "id") |>
   step_rm(has_role("id"))
 
 # we selected these hyperparameters with tuning and cross validation
@@ -523,8 +435,6 @@ rf_resamples |>
 
 ```
 
-Variable importance
-
 ```{r}
 
 rf_final <- rf_wf |>
@@ -536,9 +446,21 @@ rf_final |>
 
 ```
 
+## Analyzing Results
+
+### Assessing Error
+
 -   precision versus accuracy - justify error metric - Akbar
 -   Variable Important
 
-## Conclusions and Limitations
+### Variable Importance
 
--   Conclusions and limitations text
+## Conclusions
+
+## Limitations
+
+-   Seam mismatch
+-   Data collection protocols - memory of respondents
+-   Changes in insurance policy (medicaid changes)
+-   macro level economics
+-   Repsondents moving to different states, changes throughout the year
