@@ -7,25 +7,12 @@ embed-resources: true
 bibliography: references.bib  
 ---
 
-Outline from meeting:
-
--   Lit review
-
--   Overview of data sources
-
--   Exploratory Data Analysis and Data Cleaning
-
--   Building Models
-
--   Analyzing results - variable importance
-
--   Conclusion Limitations
-
 -   download file for data folder: (Data and Documents - Primary Data File) link: https://www.census.gov/programs-surveys/sipp/data/datasets/2019-data/2019.html Download the Pipe-Delimited Text Format version to read in a CSV
 
 ## Project Overview
 
 ### Introduction
+
 
 The Patient Protection and Affordable Care Act (ACA), passed in 2010, increased access to health insurance coverage for over 20 million Americans. Yet in 2022, over 25 million Americans still did not have health insurance.@tolbert2023 Being uninsured has been shown to lead to poorer health outcomes, limited preventative care, and increased risk of mortality.@thecons2014 Uninsurance is also associated with poor economic outcomes and increases general costs for employers, taxpayers, health systems, and the general public.@davis2003 For example, uncompensated care for those without insurance averaged over \$42 billion between 2015 and 2017.@coughlin2021
 
@@ -33,9 +20,15 @@ Losing insurance can happen for a multitude of reasons, such as job loss or a ch
 
 ### Methodology
 
+**NEED TO DESCRIBE OUR MOTIVATING QUESTION**
+
+
 Using supervised machine learning techniques and data from the Survey of Income and Participation (SIPP), we developed a model to predict the likelihood that a person would lose health insurance in the course of a year. Such a predictive model can help state and federal policymakers and other interested stakeholders target outreach and enrollment activities For example, it may be in a state's best interest to target enrollment campaigns for public insurance programs towards population groups of interest. As discussed, reducing the uninsured population can reduce health care costs for states and the federal government.
 
 ## Data Sources
+
+
+### Survey of Income and Program Participation
 
 The Survey of Income and Program Participation (SIPP) is an extensive survey conducted by the U.S. Census Bureau. It contains data on income, labor force participation, social program participation and eligibility, and general demographic characteristics. We are using the SIPP given its breadth, detail, and inclusion of health insurance status. We are using data from the year 2018, as we wanted to use data from before the COVID-19 pandemic. We chose to use 2018 versus 2019 due to limited observations in the 2019 dataset.
 
@@ -53,6 +46,8 @@ library(data.table)
 library(readxl)
 library(lubridate)
 library(vcd)
+library(caret)
+library(tidymodels)
 
 ```
 
@@ -71,7 +66,9 @@ names(data_2018) <- toupper(names(data_2018))
 #Make sure all the column names are upper-case
 ```
 
-Weights
+### Weighting Data
+
+**NEED TO EXPLAIN WHY WEIGHTING AND WHAT WE DID**
 
 ```{r}
 
@@ -88,9 +85,13 @@ names(rw_2019) <- toupper(names(rw_2019))
 data_2019 <- left_join(data_2019, rw_2019, by = c("SSUID","PNUM","MONTHCODE"))
 #Merge primary data and replicate weights on SSUID, PNUM, MONTHCODE, SPANEL, and SWAVE
 
+
 ```
 
-Cleaning
+
+### Creating Unique Respondent IDs
+
+SIPP data is divided into annual "panels" with sub "waves", and sub "sample groups. Each observation in the dataset represents a particular individual during a month. In order to analyze a loss or gain in insurance over the course of a year, we needed to create a unique identifier for each respondent. This was done through a combination of the SSUID, which was a subgroup number unique within a particular annual data, and PNUM, which was unique within each SSUID. The combination of SSUID and PNUM allowed us to assess insurance loss for each respondent and then eventually group observations by the individual. 
 
 ```{r}
 
@@ -101,22 +102,30 @@ data_2018 <- data_2018 %>%
 ```
 
 #Insurance Loss Coding
+The SIPP doesn't have an explicit variable that indicates if someone lost insurance, particularly on a month by month basis. Therefore, we needed to use available data to generate a variable for "insurance_gap", which is a dummy variable that denotes if an individual who started the year with insurance experienced a gap later in the year. 
 
 ```{r}
 #processing outcome variable - individuals covered by insurance that experienced a gap in coverage during 2019
+
+#create a separate tibble to calculate insurance gap, limiting to only participant IDs and 
+#RHLTHMTH, which is the variable capturing if someone had any kind of insurance or not
+
 lost_insurance_detail <- data_2018 %>%
   
   select(SPANEL,SSUID,SWAVE,PNUM,MONTHCODE,RHLTHMTH) %>% 
-  
-    #make unique ID for each respondent
   mutate(unique_id = paste(SSUID,PNUM))
 
 #creating variables to assess if someone lost insurance from one quarter to the next
+
 lost_insurance_prep <- lost_insurance_detail %>% 
+  
+  #sort observations so that it is in order of individuals in chronological order
   arrange(unique_id,MONTHCODE) %>% 
   group_by(unique_id) %>% 
     mutate(
-      #recode health insurance boolean to be "no_insurance"
+
+      #recode health insurance field to be a new "no_insurance"
+
       no_insurance = case_when(
         RHLTHMTH == 2 ~ 1, #had no coverage whatsoever
         RHLTHMTH == 1 ~ 0 #had coverage
@@ -126,14 +135,16 @@ lost_insurance_prep <- lost_insurance_detail %>%
       no_insurance_last_month = lag(no_insurance),
       
       #create variable subtracting no_insurance and no_insurance last month
+
       # values will = 1 when they had insurance last month,  but didn't this month
+
       lost_insurance = no_insurance - no_insurance_last_month,
      
       insurance_gap = case_when(
         lost_insurance > 0  ~ 1,
         lost_insurance <= 0 ~ 0),
      
-      #rename month columns
+      #rename month columns to make a clean cross-tabluar table
       month = case_when(
         MONTHCODE == 1 ~ "January",
         MONTHCODE == 2 ~ "February",
@@ -150,21 +161,30 @@ lost_insurance_prep <- lost_insurance_detail %>%
     )
   
     
-    #create data frame of unique individuals that had insurance at some point of the year
+
+
       #will use to filter the lost_medicaid_prep 
+
       insurance_gap <-  lost_insurance_prep %>% 
         pivot_wider(
       id_cols = unique_id, 
       names_from = month,
       values_from = insurance_gap) %>% 
-        #column to assess if someone had medicaid
+        
+        #add a new binary variable that counts the months somone lost insurance during the month
         mutate(
        month_of_insurance_loss = sum(January,February, March, April, May, June, July, August, September, October, November, December, na.rm = TRUE),
+       
+       #create dummy variable for "1" if someone lost insurance during the year
+       # "0" if they didn't experience a new loss during the year
         insurance_gap = case_when(
           month_of_insurance_loss > 0 ~ 1,
           month_of_insurance_loss < 1 ~ 0)
         )
     
+    #update the original data frame so that it is organized by unique individuals
+      #The final dataset will keep demographic variables, etc from January/the first observation
+      #But will add in the months that someone lost coverage and the new "insurance_gap" variable
       data_2018_final <- insurance_gap %>% 
         left_join(
           x = .,
@@ -178,12 +198,14 @@ lost_insurance_prep <- lost_insurance_detail %>%
 
 ##Medicaid Eligibility Variables
 
-```{r}
 
+```{r}
 
 # tibble of indicator variables for state eligibility rules of interest
 state_eligibility_rules <- read_excel("data/state_eligibility_rules.xlsx")
-  
+
+# create new variables representing the type of eligbility rule that applys to the
+  #state of residence of the respondent (as of January 2018)
 data_2018_final <-  data_2018_final %>% 
   mutate( state_id = TEHC_ST) %>% 
         left_join(
@@ -198,7 +220,9 @@ data_2018_final <-  data_2018_final %>%
 
 ### Outcome Variable Exploration
 
+
 We created the outcome variable insurance_gap, which indicates if the respondent lost coverage at any point over the course of a year. 
+
 
 ```{r}
 
@@ -211,9 +235,11 @@ data_2018_final %>%
   geom_text(stat = 'count', aes(label = after_stat(count)))
 
 ```
-There are 696 cases of insurance loss found in the data. While small compared to the count of no insurance loss, it is still a large enough n that allows for further analysis.
+
+There are 696 cases of insurance loss found in the data. While small compared to the count of no insurance loss, it is still a large enough n that allows for further analysis. Additionally, this represents 1% of the total sample. If the assumption of broader generalization to the US population holds, 1% of the insurance holding population would be substantial enough of elicit a policy response.
 
 We also wanted to explore the distributions of choice predictor variables of interest. 
+
 
 ```{r}
 
@@ -230,6 +256,7 @@ predictor_eda <- data_2018_final %>%
 predictor_eda
 
 ```
+
 Given the focus on health insurance, we were also interested to see the distribution of coverage types in this sample. 
 
 ```{r}
@@ -263,8 +290,7 @@ public_plot <- coverage_type_plot_public %>%
 
 ```
 
-
-### missingness (Akbar)
+### Missingness (Akbar)
 
 ```{r}
 
@@ -276,7 +302,6 @@ missing_vars <- data_2018_final %>%
 
 ```
 
-
 The SIPP uses two imputation methods based on the assumption that data are missing at random within subgroups of the population. The imputation methods used are:
 
 1.  Model-based Imputation: A process that involves estimating sequential models that predict values for a missing variable, conditional on demographic data, all other topic flags earnings data within the IRS and SSA.
@@ -285,16 +310,28 @@ The SIPP uses two imputation methods based on the assumption that data are missi
 -   describe why we are leaving missinging as is, since they did imputation on thier own
 -   explain missing variables in olivia's data
 
-### correlation (Alicia)
+### Exploring Correlations with Insurance Gaps
+
+In preparation for developing our predictive model, we decided to narrow down potential predictors, given the computational costs of fitting a model with over 2,800 variables (we experienced challenges processing both a correlation matrix and model fitting with this quantity). In response, we decided to use an intelligent approach, combining both data and subject matter expertise to narrow down to a reduced number of variables.
+
+First, we used subject matter knowledge to select broader of variables that could be easily associated with an individual losing insurance and therefore likely to build a stronger predictive model.
+
+-   **Employment Information**: Given that most individuals with health insurance have a private plan through their employer, we hypothesize that variables capturing employment would lend to a more effective model. For example - certain sectors may be volatile and therefore someone may be more likely to lose insurance within a given year. Note - in our process of review, we discovered that several variables were perfectly correlated with insurance loss, based on skip logic within the survey. These variables have been removed at the bottom of the following code chunk.
+-   **State Medicaid Eligibility Policies** While many individuals have private insurance, another common type of coverage is Medicaid, which covers low-income individuals. As previously mentioned, eligibility requirements vary greatly from state to state. Therefore, it is likely that these underlying trends in eligibility may cause someone to be more or less likely to lose coverage if they lose employment or based on access to this public option. For this reason, we added the Medicaid and CHIP eligibility variables that we joined into our data.
+-   **Demographic Features**: Given well documented health disparities in different racial, ethnic, and socioeconomic groups, we included these variables for the correlation analysis. Additionally, we opted to add in marital status and family size, given that families with spouses or more workers would have more options to continue coverage as a supplementary policy holder, even if losing their individual insurance.
 
 ```{r}
+
+near_zero_cols <- names(data_2018_final)[nearZeroVar(data_2018_final)]
+
+data_2018_variables_zvar <- data_2018_final %>%
+  ungroup() %>% 
+  select(-all_of(near_zero_cols))
 
 # evaluating correlation
 potential_predictors <- data_2018_final %>%
   ungroup() %>% 
-  
-  select(insurance_gap,
-         
+  select(-all_of(near_zero_cols),
          # all employment data
          starts_with("EJB"),
          
@@ -329,24 +366,29 @@ potential_predictors <- data_2018_final %>%
          TMETRO_INTV, #metropolitan area
   )
 
+#narrow list to numeric predictors to allow for correlation matrix
 potential_predictors_num <- potential_predictors %>% 
   select(where(is.numeric))
-        
+
 # Calculate correlation matrix
 correlation_matrix <- cor(potential_predictors_num,use = "pairwise.complete.obs")
 
-# Filter correlations above 0.5
+
+# Filter correlations to only show associations with insurance_gap
 insurance_gap_correlations <- correlation_matrix["insurance_gap", ]
 
-# Filter correlations greater than 0.5 or less than -0.5
+# Sort correlations in descending order, to later filer
 significant_correlations <-  insurance_gap_correlations[order(abs(insurance_gap_correlations),decreasing = TRUE)] 
 
+#Take the top 200 correlations to include within the model
 significant_correlations <- 
     significant_correlations[!is.na(significant_correlations)] %>% 
     head(200)
 
+# Convert the vector created in the prior step to a tibble
 significant_correlations <- enframe(significant_correlations,name = "variable",value = "correlation_level")
 
+#take the names of variables and put into a separate tibble 
 significant_correlations_names <- significant_correlations %>% 
   as_tibble() %>% 
   select(variable) %>% 
@@ -354,19 +396,17 @@ significant_correlations_names <- significant_correlations %>%
 
 ```
 
-### limit training/testing dataset to only include the most significant predictors
+After assessing the top 200 variables associated with insurance_gap, we filtered our raw dataset to only include the unique_id and most correlated variables.
 
 ```{r}
 
-data_2018_final_test <- data_2018_final %>% 
+data_2018_final_corr <- data_2018_final %>% 
   select(unique_id,
          all_of(significant_correlations_names))
+
+data_2018_all_zvar <- data_2018_final
   
 ```
-
-### explore categorical variables of interest (Alicia - depending on Aaron's response)
-
--   review of categorical variables and see if there is anything crazy
 
 ## Predictive Modeling
 
@@ -376,7 +416,9 @@ The correlation matrix helped us narrow down on which predictors to use to predi
 
 We also included variables related to age, food security, marriage status, disability, and other factors. While some variables may not have strong correlation values, we still plan to include them as predictors in our model as we do not want to use correlation alone as a deciding factor in our predictor selection. We plan to explore variable importance following the development and application of our predictive model.
 
-```{r}
+### Variable Selection
+
+
 
 ## Alicia's feature engineering example for the random forest model from assignment 7 
 
@@ -387,12 +429,7 @@ rf_rec <- recipe(non_return_rate ~ ., training) %>%
       step_rm(has_role("id")) %>%
   ## impute missing values
   step_impute_mean(all_numeric_predictors()) 
- 
-```
 
--   see if any variables are 100% missing once we drop to Medicaid and January
--   consider dropping and picking key variables in each issue area
--   seam mismatch
 
 ## Analyzing Results
 
@@ -404,7 +441,7 @@ vars <- "variables"
 id_vars <- "id_variables"
 
 rf_rec <- recipe(non_return_rate ~ vars., data_2019) |>
-  add_role(id_vars, new_role = "id") |>
+  update_role(id_vars, new_role = "id") |>
   step_rm(has_role("id"))
 
 # we selected these hyperparameters with tuning and cross validation
@@ -432,8 +469,6 @@ rf_resamples |>
 
 ```
 
-Variable importance
-
 ```{r}
 
 rf_final <- rf_wf |>
@@ -445,9 +480,20 @@ rf_final |>
 
 ```
 
+## Analyzing Results
+
+### Assessing Error
+
 -   precision versus accuracy - justify error metric - Akbar
--   Variable Important
 
-## Conclusions and Limitations
+### Variable Importance
 
--   Conclusions and limitations text
+## Conclusions
+
+## Limitations
+
+-   Seam mismatch
+-   Data collection protocols - memory of respondents
+-   Changes in insurance policy (medicaid changes)
+-   macro level economics
+-   Repsondents moving to different states, changes throughout the year
