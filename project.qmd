@@ -497,11 +497,20 @@ rf_final |>
 
 ## Analyzing Results
 
--predictions
+```{r}
+
+# Extract predictions and actuals from resamples
+predictions <- rf_resamples %>%
+  collect_predictions()
+
+# Create the confusion matrix
+confusion_matrix <- conf_mat(predictions, truth = insurance_gap, estimate = .pred_class)
+
+````
 
 ### Assessing Error
 
--   precision versus accuracy - justify error metric - Akbar
+We are using a confusion matrix to depict the false positive/negative rate of our predictions. In our case, it is more desirable to minimize false negatives, as to not misidentify people who had and insurance gap to not have it, since this would deny them any assistance they've been entitled to, compared to predicting someone without an insurance gap has one, which would provide them assistance they should not be getting. Thus, our metric of choice will be recall, which looks at the percentage of those who were correctly predicted to have insurance as a percentage of all of those who actually had it.
 
 ### Variable Importance
 
