@@ -367,8 +367,8 @@ significant_correlations <-  insurance_gap_correlations[order(abs(insurance_gap_
 
 #Take the top 200 correlations to include within the model
 significant_correlations <- 
-    significant_correlations[!is.na(significant_correlations)] %>% 
-    head(200)
+    significant_correlations[abs(significant_correlations) == 1] %>% 
+  print()
 
 # Convert the vector created in the prior step to a tibble
 significant_correlations <- enframe(significant_correlations,name = "variable",value = "correlation_level")
@@ -391,7 +391,10 @@ near_zero_cols <- names(data_2018_final)[nearZeroVar(x = data_2018_final, freqCu
 
 data_2018_final_rf <- data_2018_final %>%
   ungroup() %>% 
-  select(-all_of(near_zero_cols), 
+  #remove zero variance variables
+  select(-all_of(near_zero_cols),
+  #remove variables that are perfectly correlated with insurance gap
+  -all_of(significant_correlations_names),
           insurance_gap) %>% 
   mutate(insurance_gap = factor(insurance_gap))
 
@@ -489,7 +492,8 @@ resamples %>%
   collect_metrics()
 
 model_best <- resamples %>%
- select_best(metric = precision, minimize = FALSE)
+ select_best() 
+
 
 ```
 
