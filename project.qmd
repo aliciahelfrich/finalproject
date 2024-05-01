@@ -511,6 +511,9 @@ confusion_matrix <- conf_mat(predictions, truth = insurance_gap, estimate = .pre
 ```
 
 We are utilizing a confusion matrix to show the false and true positives and negative rates. For the purpose of our analysis, it is more important to minimize the false negatives, as missing people who had an insurance gap would be more problematic than identifying people who did not have such a gap as having the gap. In general, our philosophy is that if this model is an input on Medicaid eligibility, it is more desirable to be more generous. Thus, we put most emphasis on the recall of our model, as an evaluation of its performance.
+=======
+-predictions
+>>>>>>> 7a6c00f62c91ba415f43b9a2c0e29232f10cd8e8
 
 ### Assessing Error
 
