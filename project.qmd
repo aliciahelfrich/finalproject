@@ -385,7 +385,7 @@ significant_correlations_names <- significant_correlations %>%
 
 ### Variable Selection
 
-```{r}
+```{r, cache=TRUE, cache.id="zero_variance_variables"}
 
 near_zero_cols <- names(data_2018_final)[nearZeroVar(x = data_2018_final, freqCut = 99.5/.5)]
 
@@ -393,7 +393,8 @@ data_2018_final_rf <- data_2018_final %>%
   ungroup() %>% 
   select(-all_of(near_zero_cols), 
           insurance_gap) %>% 
-  mutate(as.numeric(insurance_gap))
+  mutate(insurance_gap = factor(insurance_gap))
+
 
 ```
 
@@ -425,14 +426,15 @@ folds <- vfold_cv(data = training, v = 5)
 
 #pre process data
 recipe <- recipe(insurance_gap ~., training) %>%
-  update_role(unique_id, new_role = "id") %>%
+  update_role(unique_id,state_name,SSUID,PNUM,ENJ_LAYOTYP,insurance_gap,
+              EJB4_BSLRYB,TJB3_GAMT1,TSUR10AMT, new_role = "id") %>%
   step_rm(has_role("id")) %>%
-  step_impute_mean(all_numeric_predictors()) %>%
-  step_pca(all_numeric_predictors())
+  step_impute_median(all_numeric_predictors()) %>% 
+  step_impute_mode(all_nominal_predictors()) 
 
 #see the engineered training data
- baked_data <-  bake(prep(recipe, training = training), new_data = training)
-
+baked_data <- bake(prep(recipe, training = training), new_data = training)
+ 
 ```
 
 # Hyperparameter Tuning
@@ -440,17 +442,17 @@ recipe <- recipe(insurance_gap ~., training) %>%
 
 # creating random forest tuning grid
 grid <- grid_regular(
-  trees(range = c(100, 300)), levels = 2)
+  trees(range = c(100, 500)), levels = 2)
 
 # we selected these hyperparameters with tuning and cross validation
 model <- rand_forest(
   trees = tune_grid(),
   
-  # taking roughly the square root of number of variables (post pca)
+  # taking roughly the square root of number of variables 
   mtry = 37,
   
    #taking 5-10% of total observations in a fold/in testing to avoid over fitting
-  min_n = 4
+  min_n = 300
 ) %>%
   
   #setting parallelization to reduce computational cost
@@ -469,7 +471,7 @@ workflow <- workflow() %>%
 
 ### Fitting Our Model
 
-```{r}
+```{r, cache=TRUE, cache.id="initial_model_fitting"}
 
 resamples <- workflow %>%
   fit_resamples(resamples = folds)
