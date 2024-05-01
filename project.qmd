@@ -497,32 +497,17 @@ model_best <- resamples %>%
 
 ```
 
-```{r}
-#select the best metric
-rf_best <- rf_resamples %>%
- select_best(metric = "rmse")
+```{r, cache=TRUE, cache.id="final_model_fitting"}
 
 # extract parameters of the best model
-final_rf_wf <- 
-  rf_wf %>% 
-  finalize_workflow(select_best(rf_resamples, metric = "rmse"))
+final_workflow <- 
+  workflow %>% 
+  finalize_workflow(model_best)
 
 # apply the best specifications to the other "folds" of the data
-final_rf_fit <- 
-  final_rf_wf %>% 
+final_model_fit <- 
+  final_workflow %>% 
   fit(data = training)
-```
-
-
-```{r}
-
-rf_final <- workflow |>
-  last_fit() 
-
-rf_final |>
-  extract_fit_parsnip() |>
-  vip(num_features = 20) 
-
 ```
 
 ## Analyzing Results
