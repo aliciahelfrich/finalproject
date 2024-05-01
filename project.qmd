@@ -13,15 +13,13 @@ bibliography: references.bib
 
 ### Introduction
 
+The Patient Protection and Affordable Care Act (ACA), passed in 2010, increased access to health insurance coverage for over 20 million Americans. Yet in 2022, over 25 million Americans still did not have health insurance.\@tolbert2023 Being uninsured has been shown to lead to poorer health outcomes, limited preventative care, and increased risk of mortality.\@thecons2014 Uninsurance is also associated with poor economic outcomes and increases general costs for employers, taxpayers, health systems, and the general public.\@davis2003 For example, uncompensated care for those without insurance averaged over \$42 billion between 2015 and 2017.\@coughlin2021
 
-The Patient Protection and Affordable Care Act (ACA), passed in 2010, increased access to health insurance coverage for over 20 million Americans. Yet in 2022, over 25 million Americans still did not have health insurance.@tolbert2023 Being uninsured has been shown to lead to poorer health outcomes, limited preventative care, and increased risk of mortality.@thecons2014 Uninsurance is also associated with poor economic outcomes and increases general costs for employers, taxpayers, health systems, and the general public.@davis2003 For example, uncompensated care for those without insurance averaged over \$42 billion between 2015 and 2017.@coughlin2021
-
-Losing insurance can happen for a multitude of reasons, such as job loss or a change in eligibility for public insurance programs. However, getting people reenrolled in insurance can be difficult due to lack of knowledge of available programs and financial assistance, high cost of insurance, and availability (e.g. coverage offered through employment).@tolbert2023 Due to the high social and economic costs associated with being uninsured, state and federal governments, non-profit organizations, and other interested stakeholders have launched campaigns to raise awareness on financial assistance programs, tax credits, state-based Marketplace exchanges, and Medicaid eligibility.@schwab2022 Given that the uninsured population is made up of over 25 million people, targeting campaigns can save taxpayer dollars and increase the effectiveness of the programs.
+Losing insurance can happen for a multitude of reasons, such as job loss or a change in eligibility for public insurance programs. However, getting people reenrolled in insurance can be difficult due to lack of knowledge of available programs and financial assistance, high cost of insurance, and availability (e.g. coverage offered through employment).\@tolbert2023 Due to the high social and economic costs associated with being uninsured, state and federal governments, non-profit organizations, and other interested stakeholders have launched campaigns to raise awareness on financial assistance programs, tax credits, state-based Marketplace exchanges, and Medicaid eligibility.\@schwab2022 Given that the uninsured population is made up of over 25 million people, targeting campaigns can save taxpayer dollars and increase the effectiveness of the programs.
 
 ### Methodology
 
-**NEED TO DESCRIBE OUR MOTIVATING QUESTION**
-As we described, high uninsurance rates can be expensive for both the federal government and state governments, and increase unnecessary morbidity and mortality. Given insurance is closely related to other factors in a person's life, including employment, income, race, gender, and family size, we wanted to utilize such factors to predict a person's likelihood of becoming uninsured over the course of a year. Having such information can help policymakers address underlying factors and plan ahead, fiscally and logistically.
+**NEED TO DESCRIBE OUR MOTIVATING QUESTION** As we described, high uninsurance rates can be expensive for both the federal government and state governments, and increase unnecessary morbidity and mortality. Given insurance is closely related to other factors in a person's life, including employment, income, race, gender, and family size, we wanted to utilize such factors to predict a person's likelihood of becoming uninsured over the course of a year. Having such information can help policymakers address underlying factors and plan ahead, fiscally and logistically.
 
 Using supervised machine learning techniques and data from the Survey of Income and Participation (SIPP), we developed a model to predict the likelihood that a person would lose health insurance in the course of a year. Such a predictive model can help state and federal policymakers and other interested stakeholders target outreach and enrollment activities For example, it may be in a state's best interest to target enrollment campaigns for public insurance programs towards population groups of interest. As discussed, reducing the uninsured population can reduce health care costs for states and the federal government.
 
@@ -33,7 +31,7 @@ The Survey of Income and Program Participation (SIPP) is an extensive survey con
 
 Survey participants provide data for each month in the preceding calendar year at the time of the interview. Because of this detail, observations are on the person-month level, meaning there could be 12 observations for a single person for a given variable. Household-level questions are copied across all members of the household.
 
-The SIPP categorized health insurance into several broad categories: Private, Medicare, Medicaid, military, other health insurance coverage, and coverage under ACA (e.g. through insurance Marketplace exchanges, which were established by the ACA). Given a respondent's answer to the broad question regarding type of coverage, they are able to provide greater detail about where they received the plan. 
+The SIPP categorized health insurance into several broad categories: Private, Medicare, Medicaid, military, other health insurance coverage, and coverage under ACA (e.g. through insurance Marketplace exchanges, which were established by the ACA). Given a respondent's answer to the broad question regarding type of coverage, they are able to provide greater detail about where they received the plan.
 
 The Medicaid program, the public health insurance program for low income individuals, varies heavily by state in terms of eligibility rules and guidelines. For example, three states allow for 12-month continuous eligibility, while others conduct periodic eligibility checks before the standard annual renewal date. To account for some of these variations, we have created several indicator variables.[@buettgens2023; @brooks2020]
 
@@ -89,10 +87,9 @@ data_2019 <- left_join(data_2019, rw_2019, by = c("SSUID","PNUM","MONTHCODE"))
 
 ```
 
-
 ### Creating Unique Respondent IDs
 
-SIPP data is divided into annual "panels" with sub "waves", and sub "sample groups. Each observation in the dataset represents a particular individual during a month. In order to analyze a loss or gain in insurance over the course of a year, we needed to create a unique identifier for each respondent. This was done through a combination of the SSUID, which was a subgroup number unique within a particular annual data, and PNUM, which was unique within each SSUID. The combination of SSUID and PNUM allowed us to assess insurance loss for each respondent and then eventually group observations by the individual. 
+SIPP data is divided into annual "panels" with sub "waves", and sub "sample groups. Each observation in the dataset represents a particular individual during a month. In order to analyze a loss or gain in insurance over the course of a year, we needed to create a unique identifier for each respondent. This was done through a combination of the SSUID, which was a subgroup number unique within a particular annual data, and PNUM, which was unique within each SSUID. The combination of SSUID and PNUM allowed us to assess insurance loss for each respondent and then eventually group observations by the individual.
 
 ```{r}
 
@@ -102,8 +99,7 @@ data_2018 <- data_2018 %>%
   
 ```
 
-#Insurance Loss Coding
-The SIPP doesn't have an explicit variable that indicates if someone lost insurance, particularly on a month by month basis. Therefore, we needed to use available data to generate a variable for "insurance_gap", which is a dummy variable that denotes if an individual who started the year with insurance experienced a gap later in the year. 
+#Insurance Loss Coding The SIPP doesn't have an explicit variable that indicates if someone lost insurance, particularly on a month by month basis. Therefore, we needed to use available data to generate a variable for "insurance_gap", which is a dummy variable that denotes if an individual who started the year with insurance experienced a gap later in the year.
 
 ```{r}
 #processing outcome variable - individuals covered by insurance that experienced a gap in coverage during 2019
@@ -199,7 +195,6 @@ lost_insurance_prep <- lost_insurance_detail %>%
 
 ##Medicaid Eligibility Variables
 
-
 ```{r}
 
 # tibble of indicator variables for state eligibility rules of interest
@@ -221,9 +216,7 @@ data_2018_final <-  data_2018_final %>%
 
 ### Outcome Variable Exploration
 
-
-We created the outcome variable insurance_gap, which indicates if the respondent lost coverage at any point over the course of a year. 
-
+We created the outcome variable insurance_gap, which indicates if the respondent lost coverage at any point over the course of a year.
 
 ```{r}
 
@@ -241,8 +234,7 @@ data_2018_final %>%
 
 There are 696 cases of insurance loss found in the data. While small compared to the count of no insurance loss, it is still a large enough n that allows for further analysis. Additionally, this represents 1% of the total sample. If the assumption of broader generalization to the US population holds, 1% of the insurance holding population would be substantial enough of elicit a policy response.
 
-We also wanted to explore the distributions of choice predictor variables of interest. 
-
+We also wanted to explore the distributions of choice predictor variables of interest.
 
 ```{r}
 
@@ -260,7 +252,7 @@ predictor_eda
 
 ```
 
-Given the focus on health insurance, we were also interested to see the distribution of coverage types in this sample. 
+Given the focus on health insurance, we were also interested to see the distribution of coverage types in this sample.
 
 ```{r}
 
@@ -288,8 +280,6 @@ ggplot(counts_df, aes(x = Coverage_Type, y = Count, fill = Coverage_Type)) +
   theme_minimal()
 
 ```
-
-
 
 ### Missingness (Akbar)
 
@@ -323,13 +313,6 @@ First, we used subject matter knowledge to select broader of variables that coul
 -   **Demographic Features**: Given well documented health disparities in different racial, ethnic, and socioeconomic groups, we included these variables for the correlation analysis. Additionally, we opted to add in marital status and family size, given that families with spouses or more workers would have more options to continue coverage as a supplementary policy holder, even if losing their individual insurance.
 
 ```{r}
-
-near_zero_cols <- names(data_2018_final)[nearZeroVar(x = data_2018_final, freqCut = 99.5/.5)]
-
-data_2018_variables_zvar <- data_2018_final %>%
-  ungroup() %>% 
-  select(-all_of(near_zero_cols))
-
 # evaluating correlation
 potential_predictors <- data_2018_final %>%
   ungroup() %>% 
@@ -398,74 +381,80 @@ significant_correlations_names <- significant_correlations %>%
 
 ```
 
-After assessing the top 200 variables associated with insurance_gap, we filtered our raw dataset to only include the unique_id and most correlated variables.
-
-```{r}
-
-data_2018_final_corr <- data_2018_final %>% 
-  select(unique_id,
-         all_of(significant_correlations_names))
-
-data_2018_all_zvar <- data_2018_final
-  
-```
-
 ## Predictive Modeling
-
-### Variable Selection 
-
-The correlation matrix helped us narrow down on which predictors to use to predict a loss of insurance. We made sure to drop any variables that had a correlation of 1 or -1 with our outcome variable to ensure we did not have any "perfect predictors" present in our model. We noticed that many variables with strong correlations were related to labor force participation. We hypothesize this is because the largest source of private insurance in the United States is through an employer. Respondents with steady jobs are more likely to have a steady and consistent access to health insurance. 
-
-We also included variables related to age, food security, marriage status, disability, and other factors. While some variables may not have strong correlation values, we still plan to include them as predictors in our model as we do not want to use correlation alone as a deciding factor in our predictor selection. We plan to explore variable importance following the development and application of our predictive model.
 
 ### Variable Selection
 
-
-
-## Alicia's feature engineering example for the random forest model from assignment 7 
-
-rf_rec <- recipe(non_return_rate ~ ., training) %>% 
-  ## remove categorical variables with many categories
-    update_role(state_name, county_name,low_response_score,gidtr, 
-                 pct_tea_update_leave_cen_2010, new_role = "id") %>%
-      step_rm(has_role("id")) %>%
-  ## impute missing values
-  step_impute_mean(all_numeric_predictors()) 
-
-
-## Analyzing Results
-
-Building the model
-
 ```{r}
 
-id_vars <- #tibble of id variables
-vars <- #tibble of predictors 
+near_zero_cols <- names(data_2018_final)[nearZeroVar(x = data_2018_final, freqCut = 99.5/.5)]
+
+data_2018_final_rf <- data_2018_final %>%
+  ungroup() %>% 
+  select(-all_of(near_zero_cols), 
+          insurance_gap) %>% 
+  mutate(as.numeric(insurance_gap))
+
+```
+
+The correlation matrix helped us narrow down on which predictors to use to predict a loss of insurance. We made sure to drop any variables that had a correlation of 1 or -1 with our outcome variable to ensure we did not have any "perfect predictors" present in our model. We noticed that many variables with strong correlations were related to labor force participation. We hypothesize this is because the largest source of private insurance in the United States is through an employer. Respondents with steady jobs are more likely to have a steady and consistent access to health insurance.
+
+We also included variables related to age, food security, marriage status, disability, and other factors. While some variables may not have strong correlation values, we still plan to include them as predictors in our model as we do not want to use correlation alone as a deciding factor in our predictor selection. We plan to explore variable importance following the development and application of our predictive model.
+
+
+### Creating Training/Testing and Cross Validation
+```{r}
 
 set.seed(20240430)
 
-folds <- vfold_cv(data = training, v = 5)
-
 # create a split object
-data_split <- initial_split(data = data_2018_final_corr, prop = 0.75)
+data_split <- initial_split(data = data_2018_final_rf, prop = 0.75)
+
 
 # create the training and testing data
 training <- training(x = data_split)
 testing  <- testing(x = data_split)
 
+# making less folds to reduce computational cost
+folds <- vfold_cv(data = training, v = 5)
+
+```
+
+### Feature Engineering 
+```{r}
+
+#pre process data
 recipe <- recipe(insurance_gap ~., training) %>%
   update_role(unique_id, new_role = "id") %>%
   step_rm(has_role("id")) %>%
   step_impute_mean(all_numeric_predictors()) %>%
   step_pca(all_numeric_predictors())
 
+#see the engineered training data
+ baked_data <-  bake(prep(recipe, training = training), new_data = training)
+
+```
+
+# Hyperparameter Tuning
+```{r}
+
+# creating random forest tuning grid
+grid <- grid_regular(
+  trees(range = c(100, 300)), levels = 2)
+
 # we selected these hyperparameters with tuning and cross validation
 model <- rand_forest(
-  trees = 200,
-  mtry = 11,
+  trees = tune_grid(),
+  
+  # taking roughly the square root of number of variables (post pca)
+  mtry = 37,
+  
+   #taking 5-10% of total observations in a fold/in testing to avoid over fitting
   min_n = 4
 ) %>%
-  set_mode(mode = "regression") |>
+  
+  #setting parallelization to reduce computational cost
+  set_mode(mode = "classification") |>
   set_engine(
     engine = "ranger", 
     importance = "impurity",
@@ -476,18 +465,27 @@ workflow <- workflow() %>%
   add_recipe(recipe) %>%
   add_model(model)
 
+```
+
+### Fitting Our Model
+
+```{r}
+
 resamples <- workflow %>%
   fit_resamples(resamples = folds)
 
 resamples %>%
   collect_metrics()
 
+model_best <- resamples %>%
+ select_best(metric = "Precision")
+
 ```
 
 ```{r}
 
-rf_final <- rf_wf |>
-  last_fit(pdb_split) 
+rf_final <- workflow |>
+  last_fit() 
 
 rf_final |>
   extract_fit_parsnip() |>
@@ -496,6 +494,8 @@ rf_final |>
 ```
 
 ## Analyzing Results
+
+-predictions
 
 ### Assessing Error
 
