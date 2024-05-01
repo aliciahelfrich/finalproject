@@ -47,6 +47,7 @@ library(lubridate)
 library(vcd)
 library(caret)
 library(tidymodels)
+library(tune)
 
 ```
 
@@ -102,7 +103,6 @@ data_2018 <- data_2018 %>%
 #Insurance Loss Coding The SIPP doesn't have an explicit variable that indicates if someone lost insurance, particularly on a month by month basis. Therefore, we needed to use available data to generate a variable for "insurance_gap", which is a dummy variable that denotes if an individual who started the year with insurance experienced a gap later in the year.
 
 ```{r}
-#processing outcome variable - individuals covered by insurance that experienced a gap in coverage during 2019
 
 #create a separate tibble to calculate insurance gap, limiting to only participant IDs and 
 #RHLTHMTH, which is the variable capturing if someone had any kind of insurance or not
@@ -417,7 +417,7 @@ training <- training(x = data_split)
 testing  <- testing(x = data_split)
 
 # making less folds to reduce computational cost
-folds <- vfold_cv(data = training, v = 5)
+rf_folds <- vfold_cv(data = training, v = 5)
 
 ```
 
@@ -426,14 +426,19 @@ folds <- vfold_cv(data = training, v = 5)
 
 #pre process data
 recipe <- recipe(insurance_gap ~., training) %>%
-  update_role(unique_id,state_name,SSUID,PNUM,ENJ_LAYOTYP,insurance_gap,
-              EJB4_BSLRYB,TJB3_GAMT1,TSUR10AMT, new_role = "id") %>%
+  update_role(unique_id,state_name,SSUID,PNUM,ENJ_LAYOTYP,
+              EJB4_BSLRYB,TJB3_GAMT1,TSUR10AMT,TJB3_WKLY1,TJB1_OTHER3,
+              EJB2_AWOPSM3,EJB2_AWOPEM3, EJB2_AWPCFL3, EJB2_AWOPSW3,EJB2_AWOPEW3,EJB2_AWOPRE3,TJB2_HOURLY3,TJB3_ANNSAL2,
+              TJB3_IMBMIC,TJB3_OTHER1,
+              new_role = "id") %>%
   step_rm(has_role("id")) %>%
   step_impute_median(all_numeric_predictors()) %>% 
   step_impute_mode(all_nominal_predictors()) 
 
 #see the engineered training data
-baked_data <- bake(prep(recipe, training = training), new_data = training)
+#baked_data <- bake(prep(recipe, training = training), new_data = training)
+
+
  
 ```
 
@@ -441,12 +446,12 @@ baked_data <- bake(prep(recipe, training = training), new_data = training)
 ```{r}
 
 # creating random forest tuning grid
-grid <- grid_regular(
+rf_grid <- grid_regular(
   trees(range = c(100, 500)), levels = 2)
 
-# we selected these hyperparameters with tuning and cross validation
+  # we selected these hyperparameters with tuning and cross validation
 model <- rand_forest(
-  trees = tune_grid(),
+  trees = tune(),
   
   # taking roughly the square root of number of variables 
   mtry = 37,
@@ -465,7 +470,7 @@ model <- rand_forest(
 
 workflow <- workflow() %>%
   add_recipe(recipe) %>%
-  add_model(model)
+  add_model(model) 
 
 ```
 
@@ -474,15 +479,36 @@ workflow <- workflow() %>%
 ```{r, cache=TRUE, cache.id="initial_model_fitting"}
 
 resamples <- workflow %>%
-  fit_resamples(resamples = folds)
+  tune_grid(
+    resamples = rf_folds,
+    grid = rf_grid,
+    metrics = metric_set(recall, precision)
+  )
 
 resamples %>%
   collect_metrics()
 
 model_best <- resamples %>%
- select_best(metric = "Precision")
+ select_best(metric = precision, minimize = FALSE)
 
 ```
+
+```{r}
+#select the best metric
+rf_best <- rf_resamples %>%
+ select_best(metric = "rmse")
+
+# extract parameters of the best model
+final_rf_wf <- 
+  rf_wf %>% 
+  finalize_workflow(select_best(rf_resamples, metric = "rmse"))
+
+# apply the best specifications to the other "folds" of the data
+final_rf_fit <- 
+  final_rf_wf %>% 
+  fit(data = training)
+```
+
 
 ```{r}
 
