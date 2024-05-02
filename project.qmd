@@ -1,20 +1,31 @@
 ---
-title: "Final Project"
+title: "Predicting Uninsurance Status Using Supervised Machine Learning"
 author: "Alicia Helfrich, Olivia Gomez, and Akbar Naqvi"
 format: html
 editor: visual
 embed-resources: true
 bibliography: references.bib  
 ---
-#Predicting Uninsurance Status Using Supervised Machine Learning
 
 ## Project Overview
 
 ### Introduction
 
-The Patient Protection and Affordable Care Act (ACA), passed in 2010, increased access to health insurance coverage for over 20 million Americans. Yet in 2022, over 25 million Americans still did not have health insurance.\@tolbert2023 Being uninsured has been shown to lead to poorer health outcomes, limited preventative care, and increased risk of mortality.\@thecons2014 Uninsurance is also associated with poor economic outcomes and increases general costs for employers, taxpayers, health systems, and the general public.\@davis2003 For example, uncompensated care for those without insurance averaged over \$42 billion between 2015 and 2017.\@coughlin2021
+The Patient Protection and Affordable Care Act (ACA), passed in 2010, increased access to health insurance coverage for over 20 million Americans. Yet in 2022, over 25 million Americans still did not have health insurance.[^1] Being uninsured has been shown to lead to poorer health outcomes, limited preventative care, and increased risk of mortality.[^2] Uninsurance is also associated with poor economic outcomes and increases general costs for employers, taxpayers, health systems, and the general public.[^3] For example, uncompensated care for those without insurance averaged over \$42 billion between 2015 and 2017.[^4]
 
-Losing insurance can happen for a multitude of reasons, such as job loss or a change in eligibility for public insurance programs. However, getting people reenrolled in insurance can be difficult due to lack of knowledge of available programs and financial assistance, high cost of insurance, and availability (e.g. coverage offered through employment).\@tolbert2023 Due to the high social and economic costs associated with being uninsured, state and federal governments, non-profit organizations, and other interested stakeholders have launched campaigns to raise awareness on financial assistance programs, tax credits, state-based Marketplace exchanges, and Medicaid eligibility.\@schwab2022 Given that the uninsured population is made up of over 25 million people, targeting campaigns can save taxpayer dollars and increase the effectiveness of the programs.
+[^1]: Tolbert, 2023
+
+[^2]: National Immigration Law Center, 2003
+
+[^3]: Davis, 2023
+
+[^4]: Coughlin, 2021
+
+Losing insurance can happen for a multitude of reasons, such as job loss or a change in eligibility for public insurance programs. However, getting people re-enrolled in insurance can be difficult due to lack of knowledge of available programs and financial assistance, high cost of insurance, and availability (e.g. coverage offered through employment).[^5] Due to the high social and economic costs associated with being uninsured, state and federal governments, non-profit organizations, and other interested stakeholders have launched campaigns to raise awareness on financial assistance programs, tax credits, state-based Marketplace exchanges, and Medicaid eligibility.[^6] Given that the uninsured population is made up of over 25 million people, targeting campaigns can save taxpayer dollars and increase the effectiveness of the programs.
+
+[^5]: Tolbert, 2023
+
+[^6]: Schwab, 2022
 
 ### Methodology
 
@@ -32,7 +43,13 @@ Survey participants provide data for each month in the preceding calendar year a
 
 The SIPP categorized health insurance into several broad categories: Private, Medicare, Medicaid, military, other health insurance coverage, and coverage under ACA (e.g. through insurance Marketplace exchanges, which were established by the ACA). Given a respondent's answer to the broad question regarding type of coverage, they are able to provide greater detail about where they received the plan.
 
-The Medicaid program, the public health insurance program for low income individuals, varies heavily by state in terms of eligibility rules and guidelines. For example, three states allow for 12-month continuous eligibility, while others conduct periodic eligibility checks before the standard annual renewal date. To account for some of these variations, we have created several indicator variables.[@buettgens2023; @brooks2020]
+The Medicaid program, the public health insurance program for low income individuals, varies heavily by state in terms of eligibility rules and guidelines. For example, three states allow for 12-month continuous eligibility, while others conduct periodic eligibility checks before the standard annual renewal date. To account for some of these variations, we have created several indicator variables.[^7][^8]
+
+[^7]: Buettgens, 2023
+
+[^8]: Brooks, 2020
+
+#### Library Loadings
 
 ```{r}
 #| message: false
@@ -47,7 +64,11 @@ library(vcd)
 library(caret)
 library(tidymodels)
 library(tune)
+<<<<<<< HEAD
 library(survey)
+=======
+library(vip)
+>>>>>>> dfef010 (additions and edits)
 
 ```
 
@@ -68,6 +89,37 @@ names(data_2018) <- toupper(names(data_2018))
 #Make sure all the column names are upper-case
 ```
 
+<<<<<<< HEAD
+=======
+### Weighting Data
+
+https://www2.census.gov/programs-surveys/sipp/Select_approp_wgt_2014SIPPpanel.pdf
+
+```{r}
+#| message: false
+#| warning: false
+
+#Read in the replicate-weight data. This dataset is small enough that most machines
+#	can read the whole file into memory
+
+rw_2018 <- fread("data/rw2018.csv", 
+                   sep = "|",
+                   showProgress = TRUE)
+          ## add in a place to drop everything but the("SSUID","PNUM","MONTHCODE") and WPFINWGT (monthly code)
+  
+
+names(rw_2018) <- toupper(names(rw_2018))
+#Make sure all the column names are upper-case
+
+data_2018 <- left_join(data_2019, rw_2018, by = c("SSUID","PNUM","MONTHCODE"))
+#Merge primary data and replicate weights on SSUID, PNUM, MONTHCODE, SPANEL, and SWAVE
+
+##apply weights to data (might need to do this later to avoid a ton of data)
+data_2018 <- inner_join(pu, rw, by = c("SSUID","PNUM","MONTHCODE")) sipp.svy = svrepdesign( data = data, weights = ~WPFINWGT, repweights = "REPWGT[1-9]+", type = "Fay", rho = 0.5 ) svymean( ~TPTOTINC , sipp.svy , na.rm = TRUE )
+
+
+```
+>>>>>>> dfef010 (additions and edits)
 
 ### Creating Unique Respondent IDs
 
@@ -83,7 +135,9 @@ data_2018 <- data_2018 %>%
   
 ```
 
-#Insurance Loss Coding The SIPP doesn't have an explicit variable that indicates if someone lost insurance, particularly on a month by month basis. Therefore, we needed to use available data to generate a variable for "insurance_gap", which is a dummy variable that denotes if an individual who started the year with insurance experienced a gap later in the year.
+### Insurance Loss Coding
+
+The SIPP doesn't have an explicit variable that indicates if someone lost insurance, particularly on a month by month basis. Therefore, we needed to use available data to generate a variable for "insurance_gap", which is a dummy variable that denotes if an individual who started the year with insurance experienced a gap later in the year.
 
 ```{r}
 #| message: false
@@ -252,7 +306,9 @@ data_2018_final %>%
 
 ```
 
-The above visualization shows us the distribution of food security in our sample. Food security can be an important predictor of uninsurance. One study found that compared to people who are food secure, individuals with food insecurity "postpone needed medical care and medications more often, use more emergency and inpatient care, and have higher care expenditures by as much as 121%."@Sonik
+The above visualization shows us the distribution of food security in our sample. Food security can be an important predictor of uninsurance. One study found that compared to people who are food secure, individuals with food insecurity "postpone needed medical care and medications more often, use more emergency and inpatient care, and have higher care expenditures by as much as 121%.[^9]
+
+[^9]: Sonik, 2019
 
 Given the focus on health insurance, we were also interested to see the distribution of coverage types in this sample.
 
@@ -285,7 +341,7 @@ ggplot(counts_df, aes(x = Coverage_Type, y = Count, fill = Coverage_Type)) +
 
 ```
 
-### Missingness (Akbar)
+### Missingness & Imputation Methods
 
 ```{r}
 #| message: false
@@ -302,21 +358,17 @@ select(-one_of(vars_to_drop))
 
 ```
 
-We are dropping variables with complete missingness to prep for our model.
-
-
 The SIPP uses two imputation methods based on the assumption that data are missing at random within subgroups of the population. The imputation methods used are:
 
 1.  Model-based Imputation: A process that involves estimating sequential models that predict values for a missing variable, conditional on demographic data, all other topic flags earnings data within the IRS and SSA.
 
 2.  Sequential hot-deck imputation: This method matches a record with missing data to that of a donor with similar background characteristics
 
--   describe why we are leaving missinging as is, since they did imputation on thier own
--   explain missing variables in olivia's data
+However, given that there were still over 600 variables with completely missing data (whether it be due to separate universes or another cause), we dropped all variables with complete missingness.
 
 ### Exploring Correlations with Insurance Gaps
 
-In preparation for developing our predictive model, we decided to narrow down potential predictors, given the computational costs of fitting a model with over 2,800 variables (we experienced challenges processing both a correlation matrix and model fitting with this quantity). In response, we decided to use an intelligent approach, combining both data and subject matter expertise to narrow down to a reduced number of variables.
+In preparation for developing our predictive model, we decided to narrow down potential predictors, given the computational costs of fitting a model with over 2,100 variables (we experienced challenges processing both a correlation matrix and model fitting with this quantity). In response, we decided to use an intelligent approach, combining both data and subject matter expertise to narrow down to a reduced number of variables.
 
 First, we used subject matter knowledge to select broader of variables that could be easily associated with an individual losing insurance and therefore likely to build a stronger predictive model.
 
@@ -468,9 +520,17 @@ data_2018_final_rf <- data_2018_final %>%
    -starts_with("TLIFE"),
    -starts_with("TVA5"),
    -starts_with("TVIS"),
+  -EJB4_EMONTH, 
+  -RJB4_CFLG,
+-EJB4_ENDWK,
+-EJB4_STRTJAN,
+-EJB4_STARTWK,
+-EJB3_OINCB,
+-EJB4_JOBID,
+-TJB4_HOURLY1,
   
   #remove variables that are perfectly correlated with insurance gap
-  -all_of(significant_correlations_names),
+  #-all_of(significant_correlations_names),
           insurance_gap) %>% 
   mutate(insurance_gap = factor(insurance_gap))
 
@@ -627,8 +687,10 @@ resamples <- workflow %>%
     metrics = metric_set(recall, precision)
   )
 
-resamples %>%
+results <- resamples %>%
   collect_metrics()
+
+results
 
 model_best <- resamples %>%
  select_best() 
@@ -656,8 +718,13 @@ final_model_fit <-
 
 ```{r}
 
-predictions <- resamples %>% 
-  collect_predictions()
+# predict on the testing data
+
+predictions <- bind_cols(
+  testing,
+  predict(
+      object = final_model_fit, new_data = testing)
+  )
 
 ```
 
@@ -667,39 +734,31 @@ predictions <- resamples %>%
 
 confusion_matrix <- conf_mat(predictions, truth = insurance_gap, estimate = .pred_class)
 
-```
-
-# Predict on Test Data
-
-```{r}
-
-#fit the model with testing data
-predictions_test <- predict(final_model_fit, new_data = testing)
-
-#confusion matrix
-confusion_matrix_test <- conf_mat(predictions_test, truth = testing$insurance_gap, estimate = .pred_class)
+confusion_matrix
 
 ```
-
 ### Assessing Error
 
-We are using a confusion matrix to depict the false positive/negative rate of our predictions. In our case, it is more desirable to minimize false negatives, as to not misidentify people who had and insurance gap to not have it, since this would deny them any assistance they've been entitled to, compared to predicting someone without an insurance gap has one, which would provide them assistance they should not be getting. Thus, our metric of choice will be recall, which looks at the percentage of those who were correctly predicted to have insurance as a percentage of all of those who actually had it.
+We are using a confusion matrix to depict the false positive/negative rate of our predictions. In our case, it is more desirable to minimize false negatives, as to not misidentify people who had an insurance gap to not have it, since this would deny them any assistance they've been entitled to, compared to predicting someone without an insurance gap has one, which would provide them assistance they should not be getting. Thus, our metric of choice will be recall, which looks at the percentage of those who were correctly predicted to have insurance as a percentage of all of those who actually had it.
 
 ### Variable Importance
 
 ```{r}
 
-rf_fit <- final_workflow %>% 
-  last_fit(data_split) 
-
-
-
-rf_final |>
+final_model_fit %>%
   extract_fit_parsnip() %>% 
   vip(num_features = 20) 
 ```
+Month of insurance loss was the most important predictor for the model. We hypothesize this may be because insurance enrollment for Marketplace and private coverage can only happen during specific periods of time, called an Open Enrollment period. Medicaid and Medicare are also effected by this, but not as strongly as private coverage (i.e., if you become eligible for Medicare by turning 65, you're immediately eligible and able to enroll). Open enrollment typically occurs at the end of the year. If someone loses coverage in February, for example, it's likely they will not have coverage if they are attempting to enroll in a private plan. 
+
+Several of the next most important predictors are variables related to employment. This confirms our earlier predictions of the importance of employment to health insurance. Age and income are also important predictors.
+
 
 ## Conclusions
+
+This model, while not perfect, could help inform policymakers at the state, federal, and local levels where to focus fiscal and legislative priorities to improve health insurance coverage and the overall public health of communities. By being able to predict a citizen's loss of coverage, programs could target the root causes of health insurance loss, like job loss. While stopgaps do exist for people who lose employment, and thus insurance, the coverage is expensive and poor in many places. Improving insurance coverage for unemployed populations could reduce overall healthcare spending and improve the health and well-being of communities. 
+
+This model could also inform state Medicaid agencies efforts to reduce unnecessary losses in coverage. As the Medicaid program is considered a safety net program, ensuring that everyone that is eligible for coverage has access is important. State agencies could target populations that have many uninsured individuals, as an example to how this model could be utilized.
 
 ## Limitations
 
@@ -707,4 +766,24 @@ rf_final |>
 -   Data collection protocols - memory of respondents
 -   Changes in insurance policy (medicaid changes)
 -   macro level economics
--   Repsondents moving to different states, changes throughout the year
+-   Respondents moving to different states, changes throughout the year
+
+### Sources
+
+Brooks, T., Roygardner, L., Artiga, S., Pham, O., & Dolan, R. (2020). *Medicaid and CHIP Eligibility, Enrollment, and Cost Sharing Policies as of January 2020: Findings from a 50-State Survey*. Kaiser Family Foundation (KFF). <https://www.kff.org/report-section/medicaid-and-chip-eligibility-enrollment-and-cost-sharing-policies-as-of-january-2020-findings-from-a-50-state-survey-tables/>
+
+Buettgens, M. (2023). *Ensuring Continuous Eligibility for Medicaid and CHIP: Coverage and Cost Impacts for Adults*. The Commonwealth Fund. <https://www.commonwealthfund.org/publications/issue-briefs/2023/sep/ensuring-continuous-eligibility-medicaid-impacts-adults>
+
+Coughlin, T. A., Samuel-Jakubos, H., & Garfield, R. (2021). *Sources of Payment for Uncompensated Care for the Uninsured*. Kaiser Family Foundation (KFF). <https://www.kff.org/uninsured/issue-brief/sources-of-payment-for-uncompensated-care-for-the-uninsured/>
+
+Davis, K. (2003). *In the Literature: The Costs and Consequences of Being Uninsured*. <https://www.commonwealthfund.org/sites/default/files/documents/___media_files_publications_in_the_literature_2003_jun_the_costs_and_consequences_of_being_uninsured_davis_consequences_itl_663_pdf.pdf>
+
+Schwab, R., Swindle, R., & Giovannelli, J. (2022). *State-Based Marketplace Outreach Strategies for Boosting Health Plan Enrollment of the Uninsured*. The Commonwealth Fund. <https://www.commonwealthfund.org/publications/issue-briefs/2022/oct/state-based-outreach-boosting-enrollment-uninsured>
+
+Sonik, R. A. (2019). Health Insurance and Food Insecurity: Sparking a Potential Virtuous Cycle. *American Journal of Public Health*, *109*(9), 1163–1165. <https://doi.org/10.2105/AJPH.2019.305252>
+
+*Survey of Income and Program Participation.* (2018). U.S. Census Bureau, retrieved from <https://www.census.gov/programs-surveys/sipp/data/datasets/2018-data/2018.html>
+
+*The Consequences of Being Uninsured*. (2014). National Immigration Law Center. <https://www.nilc.org/wp-content/uploads/2015/11/consequences-of-being-uninsured-2014-08.pdf>
+
+Tolbert, J., Drake, P., & Damico, A. (2023). *Key Facts about the Uninsured Population*. Kaiser Family Foundation (KFF). <https://www.kff.org/uninsured/issue-brief/key-facts-about-the-uninsured-population/>
