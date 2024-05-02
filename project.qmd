@@ -102,21 +102,26 @@ https://www2.census.gov/programs-surveys/sipp/Select_approp_wgt_2014SIPPpanel.pd
 #Read in the replicate-weight data. This dataset is small enough that most machines
 #	can read the whole file into memory
 
-rw_2018 <- fread("data/rw2018.csv", 
-                   sep = "|",
-                   showProgress = TRUE)
+rw_2018 <- fread("data/rw2018.csv", sep = "|", showProgress = TRUE) %>%
+  select(SSUID, PNUM, WPFINWGT, MONTHCODE) %>%  
+  mutate(unique_id = paste(SSUID,PNUM))
           ## add in a place to drop everything but the("SSUID","PNUM","MONTHCODE") and WPFINWGT (monthly code)
-  
 
-names(rw_2018) <- toupper(names(rw_2018))
-#Make sure all the column names are upper-case
 
-data_2018 <- left_join(data_2019, rw_2018, by = c("SSUID","PNUM","MONTHCODE"))
+names(rw_2018) <- toupper(names(rw_2019))
+#Make sure all the column names are upper-
+
+
+data_2018_final_rf <- left_join(data_2018_final_rf, rw_2018, by = c("unique_id", "SSUID", "PNUM", "MONTHCODE"))
 #Merge primary data and replicate weights on SSUID, PNUM, MONTHCODE, SPANEL, and SWAVE
 
-##apply weights to data (might need to do this later to avoid a ton of data)
-data_2018 <- inner_join(pu, rw, by = c("SSUID","PNUM","MONTHCODE")) sipp.svy = svrepdesign( data = data, weights = ~WPFINWGT, repweights = "REPWGT[1-9]+", type = "Fay", rho = 0.5 ) svymean( ~TPTOTINC , sipp.svy , na.rm = TRUE )
 
+
+data_2018_final_rf <- svydesign(
+  ids = ~unique_id,
+  weights = ~WPFINWGT,
+  data = data_2018_final_rf
+)
 
 ```
 >>>>>>> dfef010 (additions and edits)
@@ -606,6 +611,7 @@ rf_folds <- vfold_cv(data = training, v = 5)
 #| message: false
 #| warning: false
 
+
 #pre process data
 recipe <- recipe(insurance_gap ~., training) %>%
   update_role(unique_id,state_name,SSUID,PNUM,ENJ_LAYOTYP,
@@ -690,7 +696,9 @@ resamples <- workflow %>%
 results <- resamples %>%
   collect_metrics()
 
+
 results
+
 
 model_best <- resamples %>%
  select_best() 
@@ -699,6 +707,7 @@ model_best <- resamples %>%
 ```
 
 ```{r, cache=TRUE, cache.id="final_model_fitting"}
+
 
 # extract parameters of the best model
 final_workflow <- 
@@ -709,6 +718,14 @@ final_workflow <-
 final_model_fit <- 
   final_workflow %>% 
   fit(data = training)
+
+rf_final <- workflow |>
+  last_fit() 
+
+rf_final |>
+  extract_fit_parsnip() |>
+  vip(num_features = 20) 
+
 
 ```
 
@@ -727,12 +744,17 @@ predictions <- bind_cols(
   )
 
 ```
+=======
+```{r}
+# Extract predictions and actuals from resamples
+predictions <- rf_resamples %>%
+  collect_predictions()
+
 
 # Create the confusion matrix
 
-```{r}
-
 confusion_matrix <- conf_mat(predictions, truth = insurance_gap, estimate = .pred_class)
+
 
 confusion_matrix
 
@@ -741,6 +763,18 @@ confusion_matrix
 
 We are using a confusion matrix to depict the false positive/negative rate of our predictions. In our case, it is more desirable to minimize false negatives, as to not misidentify people who had an insurance gap to not have it, since this would deny them any assistance they've been entitled to, compared to predicting someone without an insurance gap has one, which would provide them assistance they should not be getting. Thus, our metric of choice will be recall, which looks at the percentage of those who were correctly predicted to have insurance as a percentage of all of those who actually had it.
 
+<<<<<<< HEAD
+=======
+We display a confusion matrix, but ultimately decide to utilize model's recall in our metric as our main metric, since the cost of false negatives in our case is higher than the cost of false positives. Meaning, it is less desirable to falsely predict a person who had an insurance gap didn't have one, rather than predict that a person who did not have a gap had one. So, the measure of the proportion of correctly predicted individuals who had an insurance gap compared to individuals who actually had an insurance gap is a crucial metric to use in our model.
+
+We are utilizing a confusion matrix to show the false and true positives and negative rates. For the purpose of our analysis, it is more important to minimize the false negatives, as missing people who had an insurance gap would be more problematic than identifying people who did not have such a gap as having the gap. In general, our philosophy is that if this model is an input on Medicaid eligibility, it is more desirable to be more generous. Thus, we put most emphasis on the recall of our model, as an evaluation of its performance.
+
+### Assessing Error
+
+-   precision versus accuracy - justify error metric - Akbar
+
+
+>>>>>>> c16012d (addressing merge conflicts)
 ### Variable Importance
 
 ```{r}
@@ -749,6 +783,7 @@ final_model_fit %>%
   extract_fit_parsnip() %>% 
   vip(num_features = 20) 
 ```
+
 Month of insurance loss was the most important predictor for the model. We hypothesize this may be because insurance enrollment for Marketplace and private coverage can only happen during specific periods of time, called an Open Enrollment period. Medicaid and Medicare are also effected by this, but not as strongly as private coverage (i.e., if you become eligible for Medicare by turning 65, you're immediately eligible and able to enroll). Open enrollment typically occurs at the end of the year. If someone loses coverage in February, for example, it's likely they will not have coverage if they are attempting to enroll in a private plan. 
 
 Several of the next most important predictors are variables related to employment. This confirms our earlier predictions of the importance of employment to health insurance. Age and income are also important predictors.
@@ -787,3 +822,4 @@ Sonik, R. A. (2019). Health Insurance and Food Insecurity: Sparking a Potential 
 *The Consequences of Being Uninsured*. (2014). National Immigration Law Center. <https://www.nilc.org/wp-content/uploads/2015/11/consequences-of-being-uninsured-2014-08.pdf>
 
 Tolbert, J., Drake, P., & Damico, A. (2023). *Key Facts about the Uninsured Population*. Kaiser Family Foundation (KFF). <https://www.kff.org/uninsured/issue-brief/key-facts-about-the-uninsured-population/>
+
