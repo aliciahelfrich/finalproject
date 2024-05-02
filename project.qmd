@@ -64,11 +64,8 @@ library(vcd)
 library(caret)
 library(tidymodels)
 library(tune)
-<<<<<<< HEAD
 library(survey)
-=======
 library(vip)
->>>>>>> dfef010 (additions and edits)
 
 ```
 
@@ -88,43 +85,6 @@ data_2018 <- fread("data/pu2018.csv",
 names(data_2018) <- toupper(names(data_2018))
 #Make sure all the column names are upper-case
 ```
-
-<<<<<<< HEAD
-=======
-### Weighting Data
-
-https://www2.census.gov/programs-surveys/sipp/Select_approp_wgt_2014SIPPpanel.pdf
-
-```{r}
-#| message: false
-#| warning: false
-
-#Read in the replicate-weight data. This dataset is small enough that most machines
-#	can read the whole file into memory
-
-rw_2018 <- fread("data/rw2018.csv", sep = "|", showProgress = TRUE) %>%
-  select(SSUID, PNUM, WPFINWGT, MONTHCODE) %>%  
-  mutate(unique_id = paste(SSUID,PNUM))
-          ## add in a place to drop everything but the("SSUID","PNUM","MONTHCODE") and WPFINWGT (monthly code)
-
-
-names(rw_2018) <- toupper(names(rw_2019))
-#Make sure all the column names are upper-
-
-
-data_2018_final_rf <- left_join(data_2018_final_rf, rw_2018, by = c("unique_id", "SSUID", "PNUM", "MONTHCODE"))
-#Merge primary data and replicate weights on SSUID, PNUM, MONTHCODE, SPANEL, and SWAVE
-
-
-
-data_2018_final_rf <- svydesign(
-  ids = ~unique_id,
-  weights = ~WPFINWGT,
-  data = data_2018_final_rf
-)
-
-```
->>>>>>> dfef010 (additions and edits)
 
 ### Creating Unique Respondent IDs
 
@@ -552,8 +512,6 @@ We also included variables related to age, food security, marriage status, disab
 
 ### Weighting Data
 
-https://www2.census.gov/programs-surveys/sipp/Select_approp_wgt_2014SIPPpanel.pdf
-
 ```{r}
 
 #Read in the replicate-weight data. This dataset is small enough that most machines
@@ -581,8 +539,6 @@ data_2018_final_rf <- svydesign(
 )
 
 ```
-
-
 
 ### Creating Training/Testing and Cross Validation
 
@@ -719,14 +675,6 @@ final_model_fit <-
   final_workflow %>% 
   fit(data = training)
 
-rf_final <- workflow |>
-  last_fit() 
-
-rf_final |>
-  extract_fit_parsnip() |>
-  vip(num_features = 20) 
-
-
 ```
 
 ## Analyzing Results and Evaluating Final Model
@@ -744,11 +692,8 @@ predictions <- bind_cols(
   )
 
 ```
-=======
+
 ```{r}
-# Extract predictions and actuals from resamples
-predictions <- rf_resamples %>%
-  collect_predictions()
 
 
 # Create the confusion matrix
@@ -761,20 +706,8 @@ confusion_matrix
 ```
 ### Assessing Error
 
-We are using a confusion matrix to depict the false positive/negative rate of our predictions. In our case, it is more desirable to minimize false negatives, as to not misidentify people who had an insurance gap to not have it, since this would deny them any assistance they've been entitled to, compared to predicting someone without an insurance gap has one, which would provide them assistance they should not be getting. Thus, our metric of choice will be recall, which looks at the percentage of those who were correctly predicted to have insurance as a percentage of all of those who actually had it.
-
-<<<<<<< HEAD
-=======
-We display a confusion matrix, but ultimately decide to utilize model's recall in our metric as our main metric, since the cost of false negatives in our case is higher than the cost of false positives. Meaning, it is less desirable to falsely predict a person who had an insurance gap didn't have one, rather than predict that a person who did not have a gap had one. So, the measure of the proportion of correctly predicted individuals who had an insurance gap compared to individuals who actually had an insurance gap is a crucial metric to use in our model.
-
 We are utilizing a confusion matrix to show the false and true positives and negative rates. For the purpose of our analysis, it is more important to minimize the false negatives, as missing people who had an insurance gap would be more problematic than identifying people who did not have such a gap as having the gap. In general, our philosophy is that if this model is an input on Medicaid eligibility, it is more desirable to be more generous. Thus, we put most emphasis on the recall of our model, as an evaluation of its performance.
 
-### Assessing Error
-
--   precision versus accuracy - justify error metric - Akbar
-
-
->>>>>>> c16012d (addressing merge conflicts)
 ### Variable Importance
 
 ```{r}
