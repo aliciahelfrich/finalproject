@@ -47,6 +47,7 @@ library(vcd)
 library(caret)
 library(tidymodels)
 library(tune)
+library(survey)
 
 ```
 
@@ -67,34 +68,6 @@ names(data_2018) <- toupper(names(data_2018))
 #Make sure all the column names are upper-case
 ```
 
-### Weighting Data
-
-https://www2.census.gov/programs-surveys/sipp/Select_approp_wgt_2014SIPPpanel.pdf
-
-```{r}
-#| message: false
-#| warning: false
-
-#Read in the replicate-weight data. This dataset is small enough that most machines
-#	can read the whole file into memory
-
-rw_2018 <- fread("data/rw2018.csv", 
-                   sep = "|",
-                   showProgress = TRUE)
-          ## add in a place to drop everything but the("SSUID","PNUM","MONTHCODE") and WPFINWGT (monthly code)
-  
-
-names(rw_2018) <- toupper(names(rw_2018))
-#Make sure all the column names are upper-case
-
-data_2019 <- left_join(data_2019, rw_2018, by = c("SSUID","PNUM","MONTHCODE"))
-#Merge primary data and replicate weights on SSUID, PNUM, MONTHCODE, SPANEL, and SWAVE
-
-##apply weights to data (might need to do this later to avoid a ton of data)
-data_2018 <- inner_join(pu, rw, by = c("SSUID","PNUM","MONTHCODE")) sipp.svy = svrepdesign( data = data, weights = ~WPFINWGT, repweights = "REPWGT[1-9]+", type = "Fay", rho = 0.5 ) svymean( ~TPTOTINC , sipp.svy , na.rm = TRUE )
-
-
-```
 
 ### Creating Unique Respondent IDs
 
@@ -512,6 +485,40 @@ We also dropped all variables with zero variance.
 
 We also included variables related to age, food security, marriage status, disability, and other factors. While some variables may not have strong correlation values, we still plan to include them as predictors in our model as we do not want to use correlation alone as a deciding factor in our predictor selection. We plan to explore variable importance following the development and application of our predictive model.
 
+### Weighting Data
+
+https://www2.census.gov/programs-surveys/sipp/Select_approp_wgt_2014SIPPpanel.pdf
+
+```{r}
+
+#Read in the replicate-weight data. This dataset is small enough that most machines
+#	can read the whole file into memory
+
+rw_2018 <- fread("data/rw2018.csv", sep = "|", showProgress = TRUE) %>%
+  select(SSUID, PNUM, WPFINWGT, MONTHCODE) %>%  
+  mutate(unique_id = paste(SSUID,PNUM))
+          ## add in a place to drop everything but the("SSUID","PNUM","MONTHCODE") and WPFINWGT (monthly code)
+
+
+names(rw_2018) <- toupper(names(rw_2019))
+#Make sure all the column names are upper-
+
+
+data_2018_final_rf <- left_join(data_2018_final_rf, rw_2018, by = c("unique_id", "SSUID", "PNUM", "MONTHCODE"))
+#Merge primary data and replicate weights on SSUID, PNUM, MONTHCODE, SPANEL, and SWAVE
+
+
+
+data_2018_final_rf <- svydesign(
+  ids = ~unique_id,
+  weights = ~WPFINWGT,
+  data = data_2018_final_rf
+)
+
+```
+
+
+
 ### Creating Training/Testing and Cross Validation
 
 ```{r}
@@ -575,7 +582,10 @@ model <- rand_forest(
   mtry = 37,
   
    #taking 5-10% of total observations in a fold/in testing to avoid over fitting
-  min_n = 300
+  min_n = 300,
+  
+  #add weights
+  weights = WFFINWGT
 ) %>%
   
   #setting parallelization to reduce computational cost
@@ -589,6 +599,18 @@ model <- rand_forest(
 workflow <- workflow() %>%
   add_recipe(recipe) %>%
   add_model(model) 
+
+
+
+design <- svydesign(
+  ids = ~SSUID + PNUM + MONTHCODE,
+  weights = ~WPFINWGT,
+  data = data_2018
+)
+
+
+
+
 
 ```
 
