@@ -6,8 +6,7 @@ editor: visual
 embed-resources: true
 bibliography: references.bib  
 ---
-
--   download file for data folder: (Data and Documents - Primary Data File) link: https://www.census.gov/programs-surveys/sipp/data/datasets/2019-data/2019.html Download the Pipe-Delimited Text Format version to read in a CSV
+#Predicting Uninsurance Status Using Supervised Machine Learning
 
 ## Project Overview
 
@@ -19,7 +18,7 @@ Losing insurance can happen for a multitude of reasons, such as job loss or a ch
 
 ### Methodology
 
-**NEED TO DESCRIBE OUR MOTIVATING QUESTION** As we described, high uninsurance rates can be expensive for both the federal government and state governments, and increase unnecessary morbidity and mortality. Given insurance is closely related to other factors in a person's life, including employment, income, race, gender, and family size, we wanted to utilize such factors to predict a person's likelihood of becoming uninsured over the course of a year. Having such information can help policymakers address underlying factors and plan ahead, fiscally and logistically.
+As we described, high uninsurance rates can be expensive for both the federal government and state governments, and increase unnecessary morbidity and mortality. Given insurance is closely related to other factors in a person's life, including employment, income, race, gender, and family size, we wanted to utilize such factors to predict a person's likelihood of becoming uninsured over the course of a year. Having such information can help policymakers address underlying factors and plan ahead, fiscally and logistically.
 
 Using supervised machine learning techniques and data from the Survey of Income and Participation (SIPP), we developed a model to predict the likelihood that a person would lose health insurance in the course of a year. Such a predictive model can help state and federal policymakers and other interested stakeholders target outreach and enrollment activities For example, it may be in a state's best interest to target enrollment campaigns for public insurance programs towards population groups of interest. As discussed, reducing the uninsured population can reduce health care costs for states and the federal government.
 
@@ -54,6 +53,8 @@ library(tune)
 ### Reading in Data
 
 ```{r, cache=TRUE, cache.id="data_pull"}
+#| message: false
+#| warning: false
 
 #initial pull of data
 data_2018 <- fread("data/pu2018.csv", 
@@ -71,20 +72,22 @@ names(data_2018) <- toupper(names(data_2018))
 https://www2.census.gov/programs-surveys/sipp/Select_approp_wgt_2014SIPPpanel.pdf
 
 ```{r}
+#| message: false
+#| warning: false
 
 #Read in the replicate-weight data. This dataset is small enough that most machines
 #	can read the whole file into memory
 
-rw_2019 <- fread("data/rw2019.csv", 
+rw_2018 <- fread("data/rw2018.csv", 
                    sep = "|",
                    showProgress = TRUE)
           ## add in a place to drop everything but the("SSUID","PNUM","MONTHCODE") and WPFINWGT (monthly code)
   
 
-names(rw_2019) <- toupper(names(rw_2019))
+names(rw_2018) <- toupper(names(rw_2018))
 #Make sure all the column names are upper-case
 
-data_2019 <- left_join(data_2019, rw_2019, by = c("SSUID","PNUM","MONTHCODE"))
+data_2019 <- left_join(data_2019, rw_2018, by = c("SSUID","PNUM","MONTHCODE"))
 #Merge primary data and replicate weights on SSUID, PNUM, MONTHCODE, SPANEL, and SWAVE
 
 ##apply weights to data (might need to do this later to avoid a ton of data)
@@ -95,9 +98,11 @@ data_2018 <- inner_join(pu, rw, by = c("SSUID","PNUM","MONTHCODE")) sipp.svy = s
 
 ### Creating Unique Respondent IDs
 
-SIPP data is divided into annual "panels" with sub "waves", and sub "sample groups. Each observation in the dataset represents a particular individual during a month. In order to analyze a loss or gain in insurance over the course of a year, we needed to create a unique identifier for each respondent. This was done through a combination of the SSUID, which was a subgroup number unique within a particular annual data, and PNUM, which was unique within each SSUID. The combination of SSUID and PNUM allowed us to assess insurance loss for each respondent and then eventually group observations by the individual.
+SIPP data is divided into annual "panels" with sub "waves", and sub "sample groups. Each observation in the data set represents a particular individual during a month. In order to analyze a loss or gain in insurance over the course of a year, we needed to create a unique identifier for each respondent. This was done through a combination of the SSUID, which was a subgroup number unique within a particular annual data, and PNUM, which was unique within each SSUID. The combination of SSUID and PNUM allowed us to assess insurance loss for each respondent and then eventually group observations by the individual.
 
 ```{r}
+#| message: false
+#| warning: false
 
 data_2018 <- data_2018 %>% 
    #make unique ID for each respondent
@@ -108,6 +113,8 @@ data_2018 <- data_2018 %>%
 #Insurance Loss Coding The SIPP doesn't have an explicit variable that indicates if someone lost insurance, particularly on a month by month basis. Therefore, we needed to use available data to generate a variable for "insurance_gap", which is a dummy variable that denotes if an individual who started the year with insurance experienced a gap later in the year.
 
 ```{r}
+#| message: false
+#| warning: false
 
 #create a separate tibble to calculate insurance gap, limiting to only participant IDs and 
 #RHLTHMTH, which is the variable capturing if someone had any kind of insurance or not
@@ -201,11 +208,13 @@ lost_insurance_prep <- lost_insurance_detail %>%
 ##Medicaid Eligibility Variables
 
 ```{r}
+#| message: false
+#| warning: false
 
 # tibble of indicator variables for state eligibility rules of interest
 state_eligibility_rules <- read_excel("data/state_eligibility_rules.xlsx")
 
-# create new variables representing the type of eligbility rule that applys to the
+# create new variables representing the type of eligibility rule that applies to the
   #state of residence of the respondent (as of January 2018)
 data_2018_final <-  data_2018_final %>% 
   mutate( state_id = TEHC_ST) %>% 
@@ -224,6 +233,8 @@ data_2018_final <-  data_2018_final %>%
 We created the outcome variable insurance_gap, which indicates if the respondent lost coverage at any point over the course of a year.
 
 ```{r}
+#| message: false
+#| warning: false
 
 summary(data_2018_final$insurance_gap)
 
@@ -242,6 +253,8 @@ There are 696 cases of insurance loss found in the data. While small compared to
 We also wanted to explore the distributions of choice predictor variables of interest.
 
 ```{r}
+#| message: false
+#| warning: false
 
 predictor_eda <- data_2018_final %>%
   select(
@@ -255,11 +268,24 @@ predictor_eda <- data_2018_final %>%
   
 predictor_eda
 
+data_2018_final %>%
+  group_by(RFOODS) %>%
+  ggplot(mapping = aes(x = RFOODS)) + 
+  geom_bar(fill = "skyblue") +
+  geom_text(stat = 'count', aes(label = after_stat(count)), vjust = -0.5, color = "black", size = 3) +
+  scale_x_continuous(breaks = c(1, 2, 3)) +
+  labs(title = "Food Security Score Distribution in Data", subtitle = "A Score of 1 is High Food Security, a Score of 3 is Low Food Security", y = "Count", x = "Food Security Score")
+  
+
 ```
+
+The above visualization shows us the distribution of food security in our sample. Food security can be an important predictor of uninsurance. One study found that compared to people who are food secure, individuals with food insecurity "postpone needed medical care and medications more often, use more emergency and inpatient care, and have higher care expenditures by as much as 121%."@Sonik
 
 Given the focus on health insurance, we were also interested to see the distribution of coverage types in this sample.
 
 ```{r}
+#| message: false
+#| warning: false
 
 # Count occurrences of RPRIMTH equal to 1 for each unique ID
 private_counts <- data_2018_final %>%
@@ -289,14 +315,22 @@ ggplot(counts_df, aes(x = Coverage_Type, y = Count, fill = Coverage_Type)) +
 ### Missingness (Akbar)
 
 ```{r}
+#| message: false
+#| warning: false
 
-# tibble of variables where every single value is missing (we can drop these)
-missing_vars <- data_2018_final %>%
-  summarise_all(~all(is.na(.))) %>%
-  gather(variable, is_missing) %>%
-  filter(is_missing)
+
+# dropping variables where every value is missing
+vars_with_missing <- colnames(data_2018_final)[apply(data_2018_final, 2, function(x) any(is.na(x)))]
+vars_with_all_missing <- sapply(data_2018_final, function(col) all(is.na(col)))
+vars_to_drop <- names(vars_with_all_missing)[vars_with_all_missing]
+
+data_2018_final <- data_2018_final %>%
+select(-one_of(vars_to_drop))
 
 ```
+
+We are dropping variables with complete missingness to prep for our model.
+
 
 The SIPP uses two imputation methods based on the assumption that data are missing at random within subgroups of the population. The imputation methods used are:
 
@@ -318,6 +352,10 @@ First, we used subject matter knowledge to select broader of variables that coul
 -   **Demographic Features**: Given well documented health disparities in different racial, ethnic, and socioeconomic groups, we included these variables for the correlation analysis. Additionally, we opted to add in marital status and family size, given that families with spouses or more workers would have more options to continue coverage as a supplementary policy holder, even if losing their individual insurance.
 
 ```{r}
+#| message: false
+#| warning: false
+
+
 # evaluating correlation
 potential_predictors <- data_2018_final %>%
   ungroup() %>% 
@@ -391,6 +429,8 @@ significant_correlations_names <- significant_correlations %>%
 ### Variable Selection
 
 ```{r, cache=TRUE, cache.id="zero_variance_variables"}
+#| message: false
+#| warning: false
 
 near_zero_cols <- names(data_2018_final)[nearZeroVar(x = data_2018_final, freqCut = 99.5/.5)]
 
@@ -466,11 +506,17 @@ data_2018_final_rf <- data_2018_final %>%
 
 The correlation matrix helped us narrow down on which predictors to use to predict a loss of insurance. We made sure to drop any variables that had a correlation of 1 or -1 with our outcome variable to ensure we did not have any "perfect predictors" present in our model. We noticed that many variables with strong correlations were related to labor force participation. We hypothesize this is because the largest source of private insurance in the United States is through an employer. Respondents with steady jobs are more likely to have a steady and consistent access to health insurance.
 
+We dropped variables related to health insurance to ensure we do not have any perfect predictors of health insurance status. For example, we dropped a variable that indicates if a respondent pays a premium. This would be a perfect predictor of a respondent having health insurance. Thus, for clarity, we dropped all variables that do not indicate the type of coverage a respondent has, and if they are covered or not.
+
+We also dropped all variables with zero variance.
+
 We also included variables related to age, food security, marriage status, disability, and other factors. While some variables may not have strong correlation values, we still plan to include them as predictors in our model as we do not want to use correlation alone as a deciding factor in our predictor selection. We plan to explore variable importance following the development and application of our predictive model.
 
 ### Creating Training/Testing and Cross Validation
 
 ```{r}
+#| message: false
+#| warning: false
 
 set.seed(20240430)
 
@@ -490,6 +536,8 @@ rf_folds <- vfold_cv(data = training, v = 5)
 ### Feature Engineering
 
 ```{r}
+#| message: false
+#| warning: false
 
 #pre process data
 recipe <- recipe(insurance_gap ~., training) %>%
@@ -512,6 +560,8 @@ recipe <- recipe(insurance_gap ~., training) %>%
 # Hyperparameter Tuning
 
 ```{r}
+#| message: false
+#| warning: false
 
 # creating random forest tuning grid
 rf_grid <- grid_regular(
@@ -545,6 +595,8 @@ workflow <- workflow() %>%
 ### Fitting Our Model
 
 ```{r, cache=TRUE, cache.id="initial_model_fitting"}
+#| message: false
+#| warning: false
 
 resamples <- workflow %>%
   tune_grid(
@@ -576,13 +628,14 @@ final_model_fit <-
 
 ```
 
-## Analyzing Results
+## Analyzing Results and Evaluating Final Model
 
 # Extract predictions and actuals from resamples
 
 ```{r}
-predictions <- rf_resamples %>% collect_predictions()
 
+predictions <- resamples %>% 
+  collect_predictions()
 
 ```
 
@@ -599,10 +652,10 @@ confusion_matrix <- conf_mat(predictions, truth = insurance_gap, estimate = .pre
 ```{r}
 
 #fit the model with testing data
-predictions_test <- predict(final_model_fit, new_data = test)
+predictions_test <- predict(final_model_fit, new_data = testing)
 
 #confusion matrix
-confusion_matrix_test <- conf_mat(predictions_test, truth = insurance_gap, estimate = .pred_class)
+confusion_matrix_test <- conf_mat(predictions_test, truth = testing$insurance_gap, estimate = .pred_class)
 
 ```
 
@@ -616,6 +669,8 @@ We are using a confusion matrix to depict the false positive/negative rate of ou
 
 rf_fit <- final_workflow %>% 
   last_fit(data_split) 
+
+
 
 rf_final |>
   extract_fit_parsnip() %>% 
