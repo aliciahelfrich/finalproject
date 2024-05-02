@@ -68,22 +68,27 @@ names(data_2018) <- toupper(names(data_2018))
 
 ### Weighting Data
 
-**NEED TO EXPLAIN WHY WEIGHTING AND WHAT WE DID**
+https://www2.census.gov/programs-surveys/sipp/Select_approp_wgt_2014SIPPpanel.pdf
 
 ```{r}
+
+#Read in the replicate-weight data. This dataset is small enough that most machines
+#	can read the whole file into memory
 
 rw_2019 <- fread("data/rw2019.csv", 
                    sep = "|",
                    showProgress = TRUE)
-#Read in the replicate-weight data. This dataset is small enough that most machines
-#	can read the whole file into memory
+          ## add in a place to drop everything but the("SSUID","PNUM","MONTHCODE") and WPFINWGT (monthly code)
+  
 
 names(rw_2019) <- toupper(names(rw_2019))
 #Make sure all the column names are upper-case
 
-
 data_2019 <- left_join(data_2019, rw_2019, by = c("SSUID","PNUM","MONTHCODE"))
 #Merge primary data and replicate weights on SSUID, PNUM, MONTHCODE, SPANEL, and SWAVE
+
+##apply weights to data (might need to do this later to avoid a ton of data)
+data_2018 <- inner_join(pu, rw, by = c("SSUID","PNUM","MONTHCODE")) sipp.svy = svrepdesign( data = data, weights = ~WPFINWGT, repweights = "REPWGT[1-9]+", type = "Fay", rho = 0.5 ) svymean( ~TPTOTINC , sipp.svy , na.rm = TRUE )
 
 
 ```
@@ -393,6 +398,64 @@ data_2018_final_rf <- data_2018_final %>%
   ungroup() %>% 
   #remove zero variance variables
   select(-all_of(near_zero_cols),
+  
+  ## dropping health insurance variables
+  -starts_with("EHI1WHO"),
+   -starts_with("EHICOST"),
+   -starts_with("EHIUNT"),
+   -starts_with("EHLTHSAV"),
+   -starts_with("ELIFEMNYN"),
+   -starts_with("ELIFE"),
+   -starts_with("EMCPART"),
+   -starts_with("EMC_BMONTH"),
+   -starts_with("EMDEND"),
+   -starts_with("EMDEXCH"),
+   -starts_with("EMDMTH"),
+   -starts_with("EMD"),
+   -starts_with("EMHI")
+   -starts_with("EMILIEND"),
+   -starts_with("EMLMTH"),
+   -starts_with("EMLUNT"),
+   -starts_with("EML_"),
+   -starts_with("ENO"),
+   -starts_with("EMO"),
+   -starts_with("EOTH"),
+   -starts_with("EOT_"),
+   -starts_with("EOWN"),
+   -starts_with("EPR"),
+   -starts_with("EVA"),
+    -starts_with("EWH"),
+    -starts_with("EYNO"),
+   -starts_with("RCDMTH"),
+   -starts_with("RDIRECTANN"),
+   -starts_with("REMPLOYANN"),
+   -starts_with("RHI"),
+   -starts_with("RMARKTPLACE"),
+   -starts_with("RMC_"),
+   -starts_with("RMD_"),
+   -starts_with("RML_"),
+   -starts_with("RMEDCARE"),
+   -starts_with("RNONHH"),
+   -starts_with("ROTHCOVMTH"),
+   -starts_with("ROT_CONTFLG"),
+   -starts_with("RPR"),
+   -starts_with("RPRI"),
+   -starts_with("RPUB"),
+   -starts_with("RTRIC"),
+   -starts_with("RVACARE"),
+   -starts_with("TCVAL_MED"),
+   -starts_with("TCVAL_STD"),
+   -starts_with("TDIS10_CFLG"),
+   -starts_with("TDIS1AMT"),
+   -starts_with("TDIS1_CFLG"),
+   -starts_with("TDOCNUM"),
+   -starts_with("TDOCNUM_"),
+   -starts_with("TFVAL_"),
+   -starts_with("THIPAY"),
+   -starts_with("TLIFE"),
+   -starts_with("TVA5"),
+   -starts_with("TVIS"),
+  
   #remove variables that are perfectly correlated with insurance gap
   -all_of(significant_correlations_names),
           insurance_gap) %>% 
@@ -405,8 +468,8 @@ The correlation matrix helped us narrow down on which predictors to use to predi
 
 We also included variables related to age, food security, marriage status, disability, and other factors. While some variables may not have strong correlation values, we still plan to include them as predictors in our model as we do not want to use correlation alone as a deciding factor in our predictor selection. We plan to explore variable importance following the development and application of our predictive model.
 
-
 ### Creating Training/Testing and Cross Validation
+
 ```{r}
 
 set.seed(20240430)
@@ -424,7 +487,8 @@ rf_folds <- vfold_cv(data = training, v = 5)
 
 ```
 
-### Feature Engineering 
+### Feature Engineering
+
 ```{r}
 
 #pre process data
@@ -446,6 +510,7 @@ recipe <- recipe(insurance_gap ~., training) %>%
 ```
 
 # Hyperparameter Tuning
+
 ```{r}
 
 # creating random forest tuning grid
@@ -512,16 +577,17 @@ final_model_fit <-
 
 ## Analyzing Results
 
-```{r}
+\`\`\`{r}
 
 # Extract predictions and actuals from resamples
-predictions <- rf_resamples %>%
-  collect_predictions()
+
+predictions \<- rf_resamples %\>% collect_predictions()
 
 # Create the confusion matrix
-confusion_matrix <- conf_mat(predictions, truth = insurance_gap, estimate = .pred_class)
 
-````
+confusion_matrix \<- conf_mat(predictions, truth = insurance_gap, estimate = .pred_class)
+
+\`\`\`\`
 
 ### Assessing Error
 
