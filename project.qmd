@@ -4,7 +4,6 @@ author: "Alicia Helfrich, Olivia Gomez, and Akbar Naqvi"
 format: html
 editor: visual
 embed-resources: true
-bibliography: references.bib  
 ---
 
 ## Project Overview
@@ -493,6 +492,7 @@ data_2018_final_rf <- data_2018_final %>%
 -EJB3_OINCB,
 -EJB4_JOBID,
 -TJB4_HOURLY1,
+-month_of_insurance_loss,
   
   #remove variables that are perfectly correlated with insurance gap
   #-all_of(significant_correlations_names),
@@ -518,16 +518,20 @@ We also included variables related to age, food security, marriage status, disab
 #	can read the whole file into memory
 
 rw_2018 <- fread("data/rw2018.csv", sep = "|", showProgress = TRUE) %>%
-  select(SSUID, PNUM, repwgt0, monthcode) %>%  
+  select(SSUID, PNUM, repwgt0, monthcode) %>%
   mutate(unique_id = paste(SSUID,PNUM))
           ## add in a place to drop everything but the("SSUID","PNUM","MONTHCODE") and WPFINWGT (monthly code)
 
 
-names(rw_2018) <- toupper(names(rw_2018))
 #Make sure all the column names are upper-
+names(rw_2018) <- toupper(names(rw_2018))
+
+names(rw_2018) <- c(names(rw_2018)[names(rw_2018) != "UNIQUE_ID"], "unique_id")
 
 
-data_2018_final_rf <- left_join(data_2018_final_rf, rw_2018, by = c("unique_id", "SSUID", "PNUM", "MONTHCODE"))
+
+
+data_2018_final_rf <- left_join(data_2018_final_rf, rw_2018, by = c("unique_id", "SSUID", "PNUM"))
 #Merge primary data and replicate weights on SSUID, PNUM, MONTHCODE, SPANEL, and SWAVE
 
 
