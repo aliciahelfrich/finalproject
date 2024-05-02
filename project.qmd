@@ -518,12 +518,12 @@ We also included variables related to age, food security, marriage status, disab
 #	can read the whole file into memory
 
 rw_2018 <- fread("data/rw2018.csv", sep = "|", showProgress = TRUE) %>%
-  select(SSUID, PNUM, WPFINWGT, MONTHCODE) %>%  
+  select(SSUID, PNUM, repwgt0, monthcode) %>%  
   mutate(unique_id = paste(SSUID,PNUM))
           ## add in a place to drop everything but the("SSUID","PNUM","MONTHCODE") and WPFINWGT (monthly code)
 
 
-names(rw_2018) <- toupper(names(rw_2019))
+names(rw_2018) <- toupper(names(rw_2018))
 #Make sure all the column names are upper-
 
 
@@ -534,7 +534,7 @@ data_2018_final_rf <- left_join(data_2018_final_rf, rw_2018, by = c("unique_id",
 
 data_2018_final_rf <- svydesign(
   ids = ~unique_id,
-  weights = ~WPFINWGT,
+  weights = ~REPWGT0,
   data = data_2018_final_rf
 )
 
@@ -704,6 +704,7 @@ confusion_matrix <- conf_mat(predictions, truth = insurance_gap, estimate = .pre
 confusion_matrix
 
 ```
+
 ### Assessing Error
 
 We are utilizing a confusion matrix to show the false and true positives and negative rates. For the purpose of our analysis, it is more important to minimize the false negatives, as missing people who had an insurance gap would be more problematic than identifying people who did not have such a gap as having the gap. In general, our philosophy is that if this model is an input on Medicaid eligibility, it is more desirable to be more generous. Thus, we put most emphasis on the recall of our model, as an evaluation of its performance.
@@ -717,14 +718,13 @@ final_model_fit %>%
   vip(num_features = 20) 
 ```
 
-Month of insurance loss was the most important predictor for the model. We hypothesize this may be because insurance enrollment for Marketplace and private coverage can only happen during specific periods of time, called an Open Enrollment period. Medicaid and Medicare are also effected by this, but not as strongly as private coverage (i.e., if you become eligible for Medicare by turning 65, you're immediately eligible and able to enroll). Open enrollment typically occurs at the end of the year. If someone loses coverage in February, for example, it's likely they will not have coverage if they are attempting to enroll in a private plan. 
+Month of insurance loss was the most important predictor for the model. We hypothesize this may be because insurance enrollment for Marketplace and private coverage can only happen during specific periods of time, called an Open Enrollment period. Medicaid and Medicare are also effected by this, but not as strongly as private coverage (i.e., if you become eligible for Medicare by turning 65, you're immediately eligible and able to enroll). Open enrollment typically occurs at the end of the year. If someone loses coverage in February, for example, it's likely they will not have coverage if they are attempting to enroll in a private plan.
 
 Several of the next most important predictors are variables related to employment. This confirms our earlier predictions of the importance of employment to health insurance. Age and income are also important predictors.
 
-
 ## Conclusions
 
-This model, while not perfect, could help inform policymakers at the state, federal, and local levels where to focus fiscal and legislative priorities to improve health insurance coverage and the overall public health of communities. By being able to predict a citizen's loss of coverage, programs could target the root causes of health insurance loss, like job loss. While stopgaps do exist for people who lose employment, and thus insurance, the coverage is expensive and poor in many places. Improving insurance coverage for unemployed populations could reduce overall healthcare spending and improve the health and well-being of communities. 
+This model, while not perfect, could help inform policymakers at the state, federal, and local levels where to focus fiscal and legislative priorities to improve health insurance coverage and the overall public health of communities. By being able to predict a citizen's loss of coverage, programs could target the root causes of health insurance loss, like job loss. While stopgaps do exist for people who lose employment, and thus insurance, the coverage is expensive and poor in many places. Improving insurance coverage for unemployed populations could reduce overall healthcare spending and improve the health and well-being of communities.
 
 This model could also inform state Medicaid agencies efforts to reduce unnecessary losses in coverage. As the Medicaid program is considered a safety net program, ensuring that everyone that is eligible for coverage has access is important. State agencies could target populations that have many uninsured individuals, as an example to how this model could be utilized.
 
@@ -755,4 +755,3 @@ Sonik, R. A. (2019). Health Insurance and Food Insecurity: Sparking a Potential 
 *The Consequences of Being Uninsured*. (2014). National Immigration Law Center. <https://www.nilc.org/wp-content/uploads/2015/11/consequences-of-being-uninsured-2014-08.pdf>
 
 Tolbert, J., Drake, P., & Damico, A. (2023). *Key Facts about the Uninsured Population*. Kaiser Family Foundation (KFF). <https://www.kff.org/uninsured/issue-brief/key-facts-about-the-uninsured-population/>
-
