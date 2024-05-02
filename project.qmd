@@ -573,27 +573,54 @@ final_workflow <-
 final_model_fit <- 
   final_workflow %>% 
   fit(data = training)
+
 ```
 
 ## Analyzing Results
 
-\`\`\`{r}
-
 # Extract predictions and actuals from resamples
 
-predictions \<- rf_resamples %\>% collect_predictions()
+```{r}
+predictions <- rf_resamples %>% collect_predictions()
+
+
+```
 
 # Create the confusion matrix
 
-confusion_matrix \<- conf_mat(predictions, truth = insurance_gap, estimate = .pred_class)
+```{r}
 
-\`\`\`\`
+confusion_matrix <- conf_mat(predictions, truth = insurance_gap, estimate = .pred_class)
+
+```
+
+# Predict on Test Data
+
+```{r}
+
+#fit the model with testing data
+predictions_test <- predict(final_model_fit, new_data = test)
+
+#confusion matrix
+confusion_matrix_test <- conf_mat(predictions_test, truth = insurance_gap, estimate = .pred_class)
+
+```
 
 ### Assessing Error
 
 We are using a confusion matrix to depict the false positive/negative rate of our predictions. In our case, it is more desirable to minimize false negatives, as to not misidentify people who had and insurance gap to not have it, since this would deny them any assistance they've been entitled to, compared to predicting someone without an insurance gap has one, which would provide them assistance they should not be getting. Thus, our metric of choice will be recall, which looks at the percentage of those who were correctly predicted to have insurance as a percentage of all of those who actually had it.
 
 ### Variable Importance
+
+```{r}
+
+rf_fit <- final_workflow %>% 
+  last_fit(data_split) 
+
+rf_final |>
+  extract_fit_parsnip() %>% 
+  vip(num_features = 20) 
+```
 
 ## Conclusions
 
