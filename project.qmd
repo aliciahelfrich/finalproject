@@ -592,6 +592,8 @@ data_2018_final_rf <- data_2018_final %>%
 
 ### Adding Survey Weights to Our Data
 
+The Census Bureau provides two types of weights to help with analysis: replicate weights and longitudinal weights. Longitudinal weights compensate for panel attrition and post-strateification adjustments to make weighted sample totals confirm to population totals for key variables. Since we are only using data for a single month, we attempted to use person-level replicate weights, which allow a single sample to simulate multiple samples,  thus generating more standard errors that maintain the normal properties of standard errors while retaining the complex survey design.
+
 ```{r, cache=TRUE, cache.id="joining_weights"}
 #| message: false
 #| warning: false
@@ -772,9 +774,7 @@ The model correctly identified all true negatives. However, it did not identify 
 
 ### Assessing Error
 
-We are utilizing a confusion matrix to show the false and true positives and negative rates. For the purpose of our analysis, it is more important to minimize the false negatives, as missing people who had an insurance gap would be more problematic than identifying people who did not have such a gap as having the gap. In general, our philosophy is that if this model is an input on Medicaid eligibility, it is more desirable to be more generous. Thus, we put most emphasis on the recall of our model, as an evaluation of its performance.
-
-### Variable Importance
+We are utilizing a confusion matrix to show the false and true positives and negative rates. For the purpose of our analysis, it is more important to minimize the false negatives, as missing people who had an insurance gap would be more problematic than identifying people who did not have such a gap as having the gap. In general, our philosophy is that if this model is an input on Medicaid eligibility, it is more desirable to be more generous. Thus, we put most emphasis on the recall of our model, as an evaluation of its performance, and chose the model with the lowest recall for our final predictions. However, the model was unable to identify any true positives, since it essentially predicted that no one loses insurance, likely because such a small number of people relative to the sample lost it throughout the year.
 
 ```{r}
 
@@ -795,7 +795,7 @@ Age, income, and race are also important predictors. For children and the elderl
 
 This model, while not perfect, could help inform policymakers at the state, federal, and local levels where to focus fiscal and legislative priorities to improve health insurance coverage and the overall public health of communities. By being able to predict a citizen's loss of coverage, and understanding what comprises the uninsured population, programs could target the root causes of health insurance loss, like job loss, health inequities, and poverty. While stopgaps do exist for people who lose employment, and thus insurance, the coverage is expensive and poor in many places. Improving insurance coverage for unemployed populations could reduce overall healthcare spending and improve the health and well-being of communities.
 
-This model could also inform state Medicaid agencies efforts to reduce unnecessary losses in coverage. As the Medicaid program is considered a safety net program, ensuring that everyone that is eligible for coverage has access is important. State agencies could target populations that have many uninsured individuals, as an example to how this model could be utilized. 
+This model could also inform state Medicaid agencies efforts to reduce unnecessary losses in coverage. As the Medicaid program is considered a safety net program, ensuring that everyone that is eligible for coverage has access is important. State agencies could target populations that have many uninsured individuals, as an example to how this model could be utilized.
 
 ## Limitations
 
