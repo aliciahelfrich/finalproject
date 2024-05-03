@@ -33,7 +33,7 @@ Losing insurance can happen for a multitude of reasons, such as job loss or a ch
 
 [^6]: Schwab, 2022
 
-\<\<\<\<\<\<\< HEAD Given the negative consequences of insurances loss and the costs associated with re-enrolling individuals in insurance, we sought to develop a predictive model that would assist government in targeting and anticipating individuals that may be most as risk of losing their insurance. If effective, uch a predictive model can help state and federal policymakers and other interested stakeholders target outreach and enrollment activities.
+Given the negative consequences of insurances loss and the costs associated with re-enrolling individuals in insurance, we sought to develop a predictive model that would assist government in targeting and anticipating individuals that may be most as risk of losing their insurance. If effective, uch a predictive model can help state and federal policymakers and other interested stakeholders target outreach and enrollment activities.
 
 ## Methodology
 
@@ -41,7 +41,7 @@ We decided to develop a supervised machine learning model to predict the likelih
 
 ## Data Sources
 
-# there were two key datasets that were utilized in our analysis: the Survey of Income and Program Participation and Medicaid Eligibility statistics.
+there were two key datasets that were utilized in our analysis: the Survey of Income and Program Participation and Medicaid Eligibility statistics.
 
 Given the negative consequences of insurances loss and the costs associated with re-enrolling individuals in insurance, we sought to develop a predictive model that would assist government in targeting and anticipating individuals that may be most as risk of losing their insurance. If effective, such a predictive model can help state and federal policymakers and other interested stakeholders target outreach and enrollment activities.
 
@@ -49,17 +49,12 @@ Given the negative consequences of insurances loss and the costs associated with
 
 We developed a supervised machine learning model to predict the likelihood that someone may lose health insurance over the course of the year. Based on available literature and subject matter expertise, we know that uninsurance can be associated with characteristics such as geography, employment status, wealth, and demographics. Therefore, much of our analysis focused on high-quality datasets that contained some of these useful predictors.
 
-## Data Sources
-
-There were two key datasets that were utilized in our analysis: the Survey of Income and Program Participation and Medicaid Eligibility statistics.
 
 ### Survey of Income and Program Participation
 
 The Survey of Income and Program Participation (SIPP) is an extensive survey conducted by the U.S. Census Bureau. It contains data on income, labor force participation, social program participation and eligibility, and general demographic characteristics. We are using the SIPP given its breadth, detail, and inclusion of health insurance status. We are using data from the year 2018, as we wanted to use data from before the COVID-19 pandemic. We chose to use 2018 versus 2019 due to limited observations in the 2019 dataset.
 
 Survey participants provide data for each month in the preceding calendar year at the time of the interview. Because of this detail, observations are on the person-month level, meaning there could be 12 observations for a single person for a given variable. Household-level questions are copied across all members of the household.
-
-The SIPP categorized health insurance into several broad categories: Private, Medicare, Medicaid, military, other health insurance coverage, and coverage under ACA (e.g. through insurance Marketplace exchanges, which were established by the ACA). Given a respondent's answer to the broad question regarding type of coverage, they are able to provide greater detail about where they received the plan and any costs associated, like premiums and out-of-pocket spending.
 
 #### Library Loadings
 
@@ -205,8 +200,8 @@ lost_insurance_prep <- lost_insurance_detail %>%
 ```
 
 ### State Medicaid Eligibility Data
-
 Many individuals are insured with Medicaid, which can vary in terms of eligibility requirements across states and can change substantially over the course of the year. We a particular states' frequency with which eligibility checks are made, and other local Medicaid policy specifications, could be a useful predictor of insurance loss. (For example, three states allow for 12-month continuous eligibility, while others conduct periodic eligibility checks before the standard annual renewal date. To account for some of these variations, we have created several indicator variables.[^7][^8]). We compiled a small dataset that summarizes these characteristics and joined them to our main SIPP data based on the respondent's state of residence.
+
 
 [^7]: Buettgens, 2023
 
@@ -256,11 +251,12 @@ data_2018_final %>%
 
 ```
 
-\<\<\<\<\<\<\< HEAD Given how low this metric appeared, decided to conduct a nonparametric binomial test to understand whether this estimate was statistically different than the insurance loss rate we would expect for the US population. Based on findings from this exercise, we adjusted our analysis accordingly.
+Given how low this metric appeared, decided to conduct a nonparametric binomial test to understand whether this estimate was statistically different than the insurance loss rate we would expect for the US population. Based on findings from this exercise, we adjusted our analysis accordingly.
 
 The null hypothesis for our binomial test was that the proportion of individuals within our sample that lost insurance throughout the course of the year is equal to the rate of insurance loss for the broader population. The alternative was that these two proportions would not be equal. In order to properly conduct this test, we needed to understand the true rate of insurance loss for the US population over the course of a year to serve as our p value. Unfortunately, while there is much literature on how many individuals are uninsured within the course of a year, there are not readily available numbers on who many people experience the new loss of insurance across a year. Therefore, we needed to make several assumptions based on the information available.
 
 We were able to find that the [The Center on Budget and Policy Priorities](https://www.cbpp.org/research/health/closing-medicaid-coverage-gap-would-help-diverse-group-and-narrow-racial#_ftn6) reports 13% of middle-aged individuals that had Medicaid in January had experienced some kind of a gap in coverage throughout the year. Using this as an anchor, we would expect that this proportion would be lower for the general population. Those on private insurance, which make up most cases (as we show below), are more likely to be in sector that is at lower risk of turnover(and thus loss of private insurance), or be more likely to have resources to purchase personal insurance in the event of losing their job. We decided to assume, based on limited data, that the true probability of losing insurance for our population of interest would be 10%.
+
 
 ```{r}
 
@@ -298,22 +294,12 @@ Secondly, with a low rate of insurance loss within our sample, we understand tha
 
 ### Examining Variable Related to Insurance Loss
 
-We sought to examine several variables that we believe have a relevance to health insurance loss: food insecurity and private vs. public health insurance
-
-#### Food Security Score
-
-Food security can be an important predictor of uninsurance. One study found that compared to people who are food secure, individuals with food insecurity "postpone needed medical care and medications more often, use more emergency and inpatient care, and have higher care expenditures by as much as 121%.[^9]
-
-[^9]: Lukens, 2021
-
-### Examining Variable Related to Insurance Loss
-
 We sought to examine several variables that we believe have a relevance to health insurance loss: food insecurity and private vs. public health insurance.
 
 #### Food Security Score
 
 Food security can be an important predictor of uninsurance. One study found that compared to people who are food secure, individuals with food insecurity "postpone needed medical care and medications more often, use more emergency and inpatient care, and have higher care expenditures by as much as 121%.[^10]
-
+[^9]: Lukens, 2021
 [^10]: Sonik, 2019
 
 The below visualization shows the distribution of food security in our sample. We found that the high majority of respondents identified as having high food security. A simplistic inference could be that any "risks" associated with low food security and uninsurance were less present in our sample population.
@@ -347,8 +333,8 @@ data_2018_final %>%
 ```
 
 #### Insurance Type Coverage
-
 Given the focus on health insurance, we were also interested to see the distribution of coverage types in this sample. We found that around 2/3rd of the insured population in the US had private health insurance through an employer. Given how many in our sample rely on their job for insurance, We could infer or hypothesize that employment variables within the dataset may play heavily into the predictors of "insurance_gap".
+
 
 ```{r}
 #| message: false
@@ -381,10 +367,6 @@ ggplot(counts_df, aes(x = Coverage_Type, y = Count, fill = Coverage_Type)) +
 
 ### Missingness & Imputation Methods
 
-\<\<\<\<\<\<\< HEAD In additional exploring several variable of interest, we sought to understand missingness within our sample. Luckily, the CENSUS Bureau utilized and published documentation around their own data imputation sources. Given the extensive expertise of Census within SIPP data, we relied heavily on thier work to mitigate systematically missing data that would have tampered with our analysis results. Census imputation protocols were as follows:
-
-# The SIPP uses two imputation methods based on the assumption that data are missing at random within subgroups of the population. The imputation methods used are:
-
 In addition to exploring several variable of interest, we sought to understand missingness within our sample. Luckily, the U.S. Census Bureau utilized and published documentation around their own data imputation sources. Given the extensive expertise of the U.S. Census Bureau within the SIPP data, we relied heavily on their work to mitigate systematically missing data that would have tampered with our analysis results. Census imputation protocols were as follows, based on the assumption that data are missing at random within subgroups of the population. The imputation methods used are:
 
 1.  Model-based Imputation: A process that involves estimating sequential models that predict values for a missing variable, conditional on demographic data, all other topic flags earnings data within the IRS and SSA.
@@ -392,6 +374,7 @@ In addition to exploring several variable of interest, we sought to understand m
 2.  Sequential hot-deck imputation: This method matches a record with missing data to that of a donor with similar background characteristics
 
 We observed, after reviewing documentation, that there were over 600 variables that were missing data entirely (whether it be due to separate universes or another cause), we dropped all variables with complete missingness.
+
 
 ```{r}
 #| message: false
@@ -416,6 +399,7 @@ After exploratory analysis, we made several decisions to refine our data so that
 
 First, we focused on removing variables that had almost zero variance, which would limit their utility in predicting "insurance_gap" and add substiantial computational costs. We compiled a list of zero variance columns through the code below:
 
+
 ```{r, cache=TRUE, cache.id="zero_variance_variables"}
 #| message: false
 #| warning: false
@@ -425,14 +409,13 @@ near_zero_cols <- names(data_2018_final)[nearZeroVar(x = data_2018_final, freqCu
 ```
 
 ### Identifying Highly Associated Variables
-
-After identifying near-zero variance columns, we sought to remove predictors that were either perfectly correlated with insurance_gap or that would likely lead to overfitting of our data (Ex:in-depth questions around specific public or private health insurance, uninsurance, etc). We utilized logical reasoning to sift through the hundreds of health insurance or employment questions that we believed would overfit our model.
+After identifying near-zero variance columns, we sought to remove predictors that were either perfectly correlated with insurance_gap or that would likely lead to overfitting of our data (e.g., in-depth questions around specific public or private health insurance, uninsurance, etc). We utilized logical reasoning to sift through the hundreds of health insurance or employment questions that we believed would overfit our model.
 
 #### Removing Perfectly Correlated Variables
 
 Secondly, we built a correlation matrix to identify variables that were perfectly correlated with insurance_gap. Below, we added in variables that either based on literature or subject matter knowledge that we believed would be most likely to be highly correlated with the variable.
 
-Please note: although we are, in the case below, were investigating the relationship between two categorical variables (versus continuous), we found the exercise useful for exploratory purposes, with lower computational costs of other tests of association.
+Please note: although we are, in the case below, investigating the relationship between two categorical variables (versus continuous), we found the exercise useful for exploratory purposes and for balancing the computational costs of other tests of association.
 
 ```{r, cache=TRUE, cache.id="correlation_matrix"}
 #| message: false
@@ -498,12 +481,13 @@ significant_correlations <-
 # Convert the vector created in the prior step to a tibble
 significant_correlations <- enframe(significant_correlations,name = "variable",value = "correlation_level") 
 
+
 #view(significant_correlations)
 
 
 ```
 
-There were 8 variables that were found to be perfectly associated with insurance_gap, namely dealing with employment metrics. Specifically, many of the variables, removed in the code below, were related to employment/unemployment spells.
+There were 8 variables that were found to be perfectly associated with insurance_gap, namely dealing with employment metrics. Many of the variables, removed in the code below, related to employment/unemployment spells.
 
 ### Removing Other Highly Correlated
 
@@ -619,7 +603,7 @@ data_2018_final_rf <- data_2018_final %>%
 
 ### Adding Survey Weights to Our Data
 
-As previously discussed, based on exploratory analysis, as well as a through review of SIPP documentation, we decided it would be prudent to incorporate survey weights into our analysis. The SIPP offers CSV files matched to unique participants that provides weights for each observation - both on a month-by-month or a yearly basis. We decided to utilize weights associated with January estimates, given that our data is filtered to include relevant information for participants in January.
+The Census Bureau provides two types of weights to help with analysis: replicate weights and longitudinal weights. Longitudinal weights compensate for panel attrition and post-strateification adjustments to make weighted sample totals confirm to population totals for key variables. Since we are only using data for a single month, we attempted to use person-level replicate weights, which allow a single sample to simulate multiple samples,  thus generating more standard errors that maintain the normal properties of standard errors while retaining the complex survey design.
 
 ```{r, cache=TRUE, cache.id="joining_weights"}
 #| message: false
@@ -630,7 +614,9 @@ rw_2018 <- fread("data/rw2018.csv", sep = "|", showProgress = TRUE) %>%
   select(SSUID, PNUM, repwgt0, monthcode) %>%
   mutate(unique_id = paste(SSUID,PNUM))
           
+
 #filter by January weights
+
 rw_2018 <- rw_2018 %>% 
   filter(monthcode == 1)
 
@@ -674,6 +660,7 @@ rf_folds <- vfold_cv(data = training, v = 5)
 
 Given the advantages of a random forest model, we kept feature engineering to a minimum, namely removing nominal/categorical variables that had little predictive advantage and conducing basic data imputation.
 
+
 ```{r}
 #| message: false
 #| warning: false
@@ -696,7 +683,6 @@ recipe <- recipe(insurance_gap ~., training) %>%
 ```
 
 ### Hyperparameter Tuning
-
 In terms of hyperparameter tuning, we tested only the trees parameter given computational costs, but assigned min_n and mtry based on best practices for the amount of variables and observations within each fold.
 
 ```{r}
@@ -777,7 +763,9 @@ final_workflow <-
 # apply the best specifications to the other "folds" of the data
 final_model_fit <- 
   final_workflow %>% 
+
 parsnip::fit(data = training) 
+
 
 ```
 
@@ -797,8 +785,8 @@ predictions <- bind_cols(
 
 In order to assess the true performance of the model against the testing data, we constructed a confusion matrix.
 
-```{r}
 
+```{r}
 # Create the confusion matrix
 
 confusion_matrix <- conf_mat(predictions, truth = insurance_gap, estimate = .pred_class)
@@ -811,6 +799,13 @@ confusion_matrix
 We found that both recall and precision for the testing model resulted in The model correctly identified all true negatives. However, it did not identify any true positives, and had 194 false negatives. Unfortunately, this would seem to confirm our concerns that there is an imbalance in classes within our dataset. We offer some methods of improving the prediction of insurance loss in future analysis'.
 
 ### Variable Importance
+
+
+The model correctly identified all true negatives. However, it did not identify any true positives, and had 194 false negatives.
+
+### Assessing Error
+
+We are utilizing a confusion matrix to show the false and true positives and negative rates. For the purpose of our analysis, it is more important to minimize the false negatives, as missing people who had an insurance gap would be more problematic than identifying people who did not have such a gap as having the gap. In general, our philosophy is that if this model is an input on Medicaid eligibility, it is more desirable to be more generous. Thus, we put most emphasis on the recall of our model, as an evaluation of its performance, and chose the model with the lowest recall for our final predictions. However, the model was unable to identify any true positives, since it essentially predicted that no one loses insurance, likely because such a small number of people relative to the sample lost it throughout the year.
 
 Although our model results were mixed, we sought to investigate the variable importance that the model used to predict insurance loss.
 
@@ -833,6 +828,7 @@ Age, income, geography and race are also important predictors. Despite mixed res
 
 This model, if improved, could help inform policymakers at the state, federal, and local levels where to focus fiscal and legislative priorities to improve health insurance coverage and the overall public health of communities. By being able to predict a citizen's loss of coverage, and understanding what comprises the uninsured population, programs could target the root causes of health insurance loss, like job loss, health inequities, and poverty. While stopgaps do exist for people who lose employment, and thus insurance, the coverage is expensive and poor in many places. Improving insurance coverage, and anticipating those most likely to lose insurance can ensure intelligent allocation of resources for unemployed populations could reduce overall healthcare spending and improve the health and well-being of communities.
 
+
 This model could also inform state Medicaid agencies efforts to reduce unnecessary losses in coverage. As the Medicaid program is considered a safety net program, ensuring that everyone that is eligible for coverage has access is important. State agencies could target populations that have many uninsured individuals, as an example to how this model could be utilized.
 
 ## Limitations
@@ -848,6 +844,7 @@ There were a number of limitations to our analysis that should influence the int
 -   **Sample population changes throughout sampling period.** For time constraints, demographic features of participants as of January were utilized to generate predictions on insurance loss. However, there are many attributes of a respondent that are subject to change and that could influence insurance loss. For example: an individual who lost Medicaid coverage because they moved to a new state with stricter Medicaid requirements, or an individual who became divorced and lost their spouses' insurance coverage. The omission of this data throughout our analysis means that useful patterns may not have been captured within our model, and therefore could hinder performance within other environments.
 
 Ultimately, these factors, among others, should be considered prior to expanding on our model or utilizing to understanding broader, generalization predictions. At this point in time, we would not recommend the utilization of our model to inform policy decisions.
+
 
 ### Sources
 
