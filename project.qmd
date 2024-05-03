@@ -1,7 +1,13 @@
 ---
 title: "Predicting Uninsurance Status Using Supervised Machine Learning"
 author: "Alicia Helfrich, Olivia Gomez, and Akbar Naqvi"
-format: html
+format:
+  html:
+    toc: true
+    toc-location: left
+    number-sections: true
+    code-overflow: wrap
+    theme: journal
 editor: visual
 embed-resources: true
 ---
@@ -238,17 +244,17 @@ data_2018_final %>%
   geom_bar(fill = "skyblue") +
   geom_text(stat = 'count', aes(label = after_stat(count)), vjust = -0.5, color = "black", size = 3) +
   scale_x_continuous(breaks = c(0, 1)) +
-  labs(title = "Insurance vs. Uninsurance in Data", y = "Count", x = "Coverage (0 = Covered, 1 = Lost Coverage)")
+  labs(title = "Most of the Sample is Insured, But There is Still Enough \nUninsured for Meaningful Analysis", y = "Count", x = "Coverage (0 = Covered, 1 = Lost Coverage)")
 
 
 
 ```
 
-Given how low this metric appeared, we decided to conduct a nonparametric binomial test. With the null hypothesis that the true range of proportions of those that lost insurance over the course of the year in our sample would be equal to that of the broader population.The alternative would be that the proportion of those within our sample would be different than that expected in the broader populations. 
+Given how low this metric appeared, we decided to conduct a nonparametric binomial test. With the null hypothesis that the true range of proportions of those that lost insurance over the course of the year in our sample would be equal to that of the broader population.The alternative would be that the proportion of those within our sample would be different than that expected in the broader populations.
 
-Unfortunately, this test depends on an in-depth knowledge of insurance gap rates, and there were not well published statistics on how many people who had insurance in January of 2018 lost it over the course of the year (only those that were uninsured at a given period of time, including in January). Therefore, we had to make assumptions when designing our binomial test. 
+Unfortunately, this test depends on an in-depth knowledge of insurance gap rates, and there were not well published statistics on how many people who had insurance in January of 2018 lost it over the course of the year (only those that were uninsured at a given period of time, including in January). Therefore, we had to make assumptions when designing our binomial test.
 
-To do this, we found that the [The Center on Budget and Policy Priorities](https://www.cbpp.org/research/health/closing-medicaid-coverage-gap-would-help-diverse-group-and-narrow-racial#_ftn6) reported that around 13% of middle-aged individuals that had Medicaid in January had experienced some kind of a gap in coverage throughout the year. We would expect that this percentage be lower when considering the broader US population, which would include individuals that are NOT covered by Medicaid and those that might be less likely to lose insurance (such as those of high socioeconomic status within high salary jobs). We decided to make an assumption, based on limited data, that the true probability of losing insurance would be 5%. 
+To do this, we found that the [The Center on Budget and Policy Priorities](https://www.cbpp.org/research/health/closing-medicaid-coverage-gap-would-help-diverse-group-and-narrow-racial#_ftn6) reported that around 13% of middle-aged individuals that had Medicaid in January had experienced some kind of a gap in coverage throughout the year. We would expect that this percentage be lower when considering the broader US population, which would include individuals that are NOT covered by Medicaid and those that might be less likely to lose insurance (such as those of high socioeconomic status within high salary jobs). We decided to make an assumption, based on limited data, that the true probability of losing insurance would be 5%.
 
 ```{r}
 
@@ -278,14 +284,16 @@ print(binom_test)
 
 ```
 
-The results of our binomial test would be to reject the null hypothesis at a 90% confidence level. Under an assumption of a robust sample, this could indicate that the true proportion of someone to experience a loss of insurance throughout the year would be between 1% and 1.1%. For our own interpretation, however, it would indicate that our outcome variable within our sample would not seem to align with the expected percentage of individuals that would experience coverage loss based on other available data. Based on subject matter knowledge, we would have anticipated the estimated proportion of those to lose insurance to be higher. 
+The results of our binomial test would be to reject the null hypothesis at a 90% confidence level. Under an assumption of a robust sample, this could indicate that the true proportion of someone to experience a loss of insurance throughout the year would be between 1% and 1.1%. For our own interpretation, however, it would indicate that our outcome variable within our sample would not seem to align with the expected percentage of individuals that would experience coverage loss based on other available data. Based on subject matter knowledge, we would have anticipated the estimated proportion of those to lose insurance to be higher.
 
-Given time constraints for our analysis, we used this information to guide our model creation process in several ways. First, the Census recommends the utilization of weights when calculating test statistics. It is possible that the raw, unweighted sample, is underrepresenting demographic groups that would be most likely to lost insurance. For example, there is ample literature that discusses disparities in health coverage between white and black racial groups. If black americans were undersample, it could contribute to a lower than expected insurance loss rate. 
+Given time constraints for our analysis, we used this information to guide our model creation process in several ways. First, the Census recommends the utilization of weights when calculating test statistics. It is possible that the raw, unweighted sample, is underrepresenting demographic groups that would be most likely to lost insurance. For example, there is ample literature that discusses disparities in health coverage between white and black racial groups. If black americans were undersample, it could contribute to a lower than expected insurance loss rate.
 
-Ultimately, we will balance this dynamic in a few ways: the first is that we will incorporate weights into our model pre-processing procedures to mitigate for systematic undersampling. Additionally, given that such a low proportion of individuals would be predicted to be low, we will look across various error metrics for our model to ensure and the model has a strong balance of recall, precision and accuracy. This can ensure that, predicting no one to lose insurance, for example, will not be hidden beneath extremely high recall rates. 
+Ultimately, we will balance this dynamic in a few ways: the first is that we will incorporate weights into our model pre-processing procedures to mitigate for systematic undersampling. Additionally, given that such a low proportion of individuals would be predicted to be low, we will look across various error metrics for our model to ensure and the model has a strong balance of recall, precision and accuracy. This can ensure that, predicting no one to lose insurance, for example, will not be hidden beneath extremely high recall rates.
 
 ### Examining Variable Related to Health Insurance
+
 #### Food Security Score
+
 ```{r}
 #| message: false
 #| warning: false
@@ -308,7 +316,7 @@ data_2018_final %>%
   geom_bar(fill = "skyblue") +
   geom_text(stat = 'count', aes(label = after_stat(count)), vjust = -0.5, color = "black", size = 3) +
   scale_x_continuous(breaks = c(1, 2, 3)) +
-  labs(title = "Food Security Score Distribution in Data", subtitle = "A Score of 1 is High Food Security, a Score of 3 is Low Food Security", y = "Count", x = "Food Security Score")
+  labs(title = "Food Security Is High in Sample", subtitle = "A Score of 1 is High Food Security, a Score of 3 is Low Food Security", y = "Count", x = "Food Security Score")
   
 
 ```
@@ -317,7 +325,7 @@ The above visualization shows us the distribution of food security in our sample
 
 [^9]: Sonik, 2019
 
-#### Insurance Type Coverage 
+#### Insurance Type Coverage
 
 Given the focus on health insurance, we were also interested to see the distribution of coverage types in this sample.
 
@@ -345,7 +353,7 @@ ggplot(counts_df, aes(x = Coverage_Type, y = Count, fill = Coverage_Type)) +
   geom_text(aes(label = Count), vjust = -0.5, color = "black", size = 3) +
   labs(x = "Coverage Type", y = "Count") +
   scale_fill_manual(values = c("Private" = "blue", "Public" = "red")) +  
-  labs(title = "Public vs. Private Insurance in Data", fill = "Coverage Type") +
+  labs(title = "Private Insurance Outweighs Public Insurance in Sample", fill = "Coverage Type") +
   theme_minimal()
 
 ```
@@ -375,7 +383,6 @@ The SIPP uses two imputation methods based on the assumption that data are missi
 
 However, given that there were still over 600 variables with completely missing data (whether it be due to separate universes or another cause), we dropped all variables with complete missingness.
 
-
 ## Data Preparation for Model Creation
 
 ### Identifying Zero Variance Predictors
@@ -398,6 +405,7 @@ We also dropped all variables with zero variance.
 We also included variables related to age, food security, marriage status, disability, and other factors. While some variables may not have strong correlation values, we still plan to include them as predictors in our model as we do not want to use correlation alone as a deciding factor in our predictor selection. We plan to explore variable importance following the development and application of our predictive model.
 
 ### Identifying Perfectly Correlated Variables
+
 In preparation for developing our predictive model, we decided to narrow down potential predictors, given the computational costs of fitting a model with over 2,100 variables (we experienced challenges processing both a correlation matrix and model fitting with this quantity). In response, we decided to use an intelligent approach, combining both data and subject matter expertise to narrow down to a reduced number of variables.
 
 First, we used subject matter knowledge to select broader of variables that could be easily associated with an individual losing insurance and therefore likely to build a stronger predictive model.
@@ -467,15 +475,6 @@ significant_correlations <-  insurance_gap_correlations[order(abs(insurance_gap_
 significant_correlations <- 
     significant_correlations[abs(significant_correlations) == 1] %>% 
   print()
-
-# Convert the vector created in the prior step to a tibble
-significant_correlations <- enframe(significant_correlations,name = "variable",value = "correlation_level")
-
-#take the names of variables and put into a separate tibble 
-significant_correlations_names <- significant_correlations %>% 
-  as_tibble() %>% 
-  select(variable) %>% 
-  pull(variable)
 
 ```
 
@@ -552,6 +551,31 @@ data_2018_final_rf <- data_2018_final %>%
 -EJB4_JOBID,
 -TJB4_HOURLY1,
 -month_of_insurance_loss,
+-EMHLOAN2SITE, 
+-EJB4_CEXPAY, 
+-EJB3_AWOPSM3, 
+-EJB3_AWPCFL3, 
+-EJB3_AWOPSW3, 
+-EJB3_AWOPEW3, 
+-TJB4_CXAMT,
+-EJB4_CEXPAY, 
+-EJB3_AWOPSM3, 
+-EJB3_AWPCFL3, 
+-EJB3_AWOPSW3, 
+-EJB3_AWOPEW3, 
+-TJB4_CXAMT,
+-EJB4_INCPB, 
+-EJB4_CEXPAY, 
+-EJB4_PFTLOSS, 
+-EJB3_AWOPSM3, 
+-EJB3_AWPCFL3, 
+-EJB3_AWOPSW3, 
+-EJB3_AWOPEW3, 
+-TJB4_EMPB, 
+-TBSJ5VAL, 
+-TBSJ5DEBTVAL, 
+-TJB4_CXAMT, 
+-TJB4_PRFTB,
   
   #remove variables that are perfectly correlated with insurance gap
   #-all_of(significant_correlations_names),
@@ -560,7 +584,6 @@ data_2018_final_rf <- data_2018_final %>%
 
 
 ```
-
 
 ## Adding Survey Weights to Our Data
 
@@ -574,7 +597,7 @@ rw_2018 <- fread("data/rw2018.csv", sep = "|", showProgress = TRUE) %>%
   mutate(unique_id = paste(SSUID,PNUM))
           ## add in a place to drop everything but the("SSUID","PNUM","MONTHCODE") and WPFINWGT (monthly code)
 rw_2018 <- rw_2018 %>% 
-  filter(MONTHCODE == 1)
+  filter(monthcode == 1)
 
 #Make sure all the column names are upper-
 names(rw_2018) <- toupper(names(rw_2018))
@@ -586,14 +609,11 @@ data_2018_final_rf <- inner_join(data_2018_final_rf, rw_2018, by = "unique_id")
 
 
 #create survey object
-data_2018_final_rf_svy <- svydesign(
-  ids = ~unique_id,
-  weights = ~REPWGT0,
-  data = data_2018_final_rf
-)
-
-#convert to a data frame
-data_2018_final_rf <- as.data.frame(data_2018_final_rf_svy)
+#data_2018_final_rf_svy <- svydesign(
+  #ids = ~unique_id,
+  #weights = ~REPWGT0,
+  #data = data_2018_final_rf
+#)
 
 ```
 
@@ -628,14 +648,15 @@ rf_folds <- vfold_cv(data = training, v = 5)
 
 #pre process data
 recipe <- recipe(insurance_gap ~., training) %>%
-  update_role(unique_id,state_name,SSUID,PNUM,ENJ_LAYOTYP,
+  update_role(unique_id,state_name,SSUID.x, SSUID.y, PNUM.x, PNUM.y,
+              ENJ_LAYOTYP,
               EJB4_BSLRYB,TJB3_GAMT1,TSUR10AMT,TJB3_WKLY1,TJB1_OTHER3,
               EJB2_AWOPSM3,EJB2_AWOPEM3, EJB2_AWPCFL3, EJB2_AWOPSW3,EJB2_AWOPEW3,EJB2_AWOPRE3,TJB2_HOURLY3,TJB3_ANNSAL2,
               TJB3_IMBMIC,TJB3_OTHER1,
               new_role = "id") %>%
   step_rm(has_role("id")) %>%
   step_impute_median(all_numeric_predictors()) %>% 
-  step_impute_mode(all_nominal_predictors()) 
+  step_impute_mode(all_nominal_predictors())
 
 #see the engineered training data
 #baked_data <- bake(prep(recipe, training = training), new_data = training)
@@ -662,9 +683,6 @@ model <- rand_forest(
   
    #taking 5-10% of total observations in a fold/in testing to avoid over fitting
   min_n = 300,
-  
-  #add weights
-  weights = WFFINWGT
 ) %>%
   
   #setting parallelization to reduce computational cost
@@ -681,11 +699,11 @@ workflow <- workflow() %>%
 
 
 
-design <- svydesign(
-  ids = ~SSUID + PNUM + MONTHCODE,
-  weights = ~WPFINWGT,
-  data = data_2018
-)
+#design <- svydesign(
+  #ids = ~SSUID + PNUM + MONTHCODE,
+  #weights = ~WPFINWGT,
+  #data = data_2018
+#)
 
 ```
 
@@ -699,7 +717,8 @@ resamples <- workflow %>%
   tune_grid(
     resamples = rf_folds,
     grid = rf_grid,
-    metrics = metric_set(recall, precision)
+    metrics = metric_set(recall, precision),
+    weights = REPWGT0
   )
 
 results <- resamples %>%
@@ -726,7 +745,7 @@ final_workflow <-
 # apply the best specifications to the other "folds" of the data
 final_model_fit <- 
   final_workflow %>% 
-  fit(data = training)
+  fit(data = training)#, weights = REPWGT0) 
 
 ```
 
@@ -757,6 +776,8 @@ confusion_matrix <- conf_mat(predictions, truth = insurance_gap, estimate = .pre
 confusion_matrix
 
 ```
+The model correctly identified all true negatives
+
 
 ### Assessing Error
 
@@ -771,9 +792,9 @@ final_model_fit %>%
   vip(num_features = 20) 
 ```
 
-Month of insurance loss was the most important predictor for the model. We hypothesize this may be because insurance enrollment for Marketplace and private coverage can only happen during specific periods of time, called an Open Enrollment period. Medicaid and Medicare are also effected by this, but not as strongly as private coverage (i.e., if you become eligible for Medicare by turning 65, you're immediately eligible and able to enroll). Open enrollment typically occurs at the end of the year. If someone loses coverage in February, for example, it's likely they will not have coverage if they are attempting to enroll in a private plan.
+The month when a person began a job is the most important predictor. We hypothesize this may be because private insurance is closely related to employment. A new job may mean that an uninsured individual gains coverage as well.
 
-Several of the next most important predictors are variables related to employment. This confirms our earlier predictions of the importance of employment to health insurance. Age and income are also important predictors.
+Several of the next most important predictors are also variables related to employment, further confirming our earlier predictions of the importance of employment to health insurance. Age, location, and income are also important predictors.
 
 ## Conclusions
 
